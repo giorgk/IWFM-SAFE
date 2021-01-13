@@ -1,0 +1,4 @@
+# ignore the simulation output files 
+*.hdf
+*.out
+*.bin
