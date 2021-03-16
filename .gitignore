@@ -2,3 +2,6 @@
 *.hdf
 *.out
 *.bin
+
+# ignore the folder where I put all the communication with Hubert
+/Examples/test1/HubertDocs/*
