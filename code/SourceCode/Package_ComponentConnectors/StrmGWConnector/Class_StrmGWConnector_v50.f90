@@ -79,6 +79,7 @@ MODULE Class_StrmGWConnector_v50
       PROCEDURE,PASS :: ComputeStrmGWFlow_AtMinHead 
       PROCEDURE,PASS :: Simulate                    => StrmGWConnector_v50_Simulate
       PROCEDURE,PASS :: CompileConductance          => StrmGWConnector_v50_CompileConductance
+      PROCEDURE,PASS :: Set_KH_KV                   => StrmGWConnector_v50_Set_KH_KV
   END TYPE StrmGWConnector_v50_Type
   
   
@@ -368,5 +369,12 @@ CONTAINS
     END DO
     
   END SUBROUTINE ComputeStrmGWFlow_AtMinHead
+
+  SUBROUTINE StrmGWConnector_v50_Set_KH_KV(Connector, Kh, Kv, iStat)
+    CLASS(StrmGWConnector_v50_Type)    :: Connector
+    REAL(8),INTENT(IN)                  :: Kh(:), Kv(:)
+    INTEGER,INTENT(OUT)                 :: iStat
+    iStat = 0;
+  END SUBROUTINE StrmGWConnector_v50_Set_KH_KV
 
 END MODULE

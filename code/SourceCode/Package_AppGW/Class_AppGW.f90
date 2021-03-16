@@ -268,6 +268,7 @@ MODULE Class_AppGW
       PROCEDURE,PASS   :: RestorePumpingToReadValues
       PROCEDURE,PASS   :: TransferOutputToHDF
       PROCEDURE,PASS   :: RemoveBC
+      PROCEDURE,PASS   :: ReadKhKv
       GENERIC          :: GetModelData_AtLocation           => GetModelData_AtLocation_FromFullModel    , &
                                                                GetModelData_AtLocation_FromInquiryModel
   END TYPE AppGWType
@@ -4208,6 +4209,17 @@ CONTAINS
     AppGW%lAppBC_Defined = AppGW%AppBC%IsDefined()
     
   END SUBROUTINE RemoveBC
+
+
+
+  SUBROUTINE ReadKhKv(AppGW, inode, ilayer, KH, KV)
+    CLASS(AppGWType)    :: AppGW
+    INTEGER,INTENT(IN)  :: inode,ilayer
+    REAL(8), INTENT(OUT) :: KH, KV
+    KH = AppGW%Nodes(inode,ilayer)%Kh
+    KV = AppGW%Nodes(inode,ilayer)%Kh
+
+  END SUBROUTINE  
   
   
 END MODULE

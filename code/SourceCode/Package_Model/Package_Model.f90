@@ -416,6 +416,7 @@ MODULE Package_Model
       PROCEDURE,PASS   :: AddBypass
       PROCEDURE,PASS   :: TurnSupplyAdjustOnOff
       PROCEDURE,PASS   :: RestorePumpingToReadValues
+      PROCEDURE,pass   :: SetConductivity2StreamNodes
       GENERIC          :: New               => SetStaticComponent                                  , &
                                                SetStaticComponent_FromBinFile                      , &
                                                SetStaticComponent_AllDataSupplied                  , &
@@ -762,6 +763,10 @@ CONTAINS
     TYPE(GenericFileType)                  :: PPBinaryFile
     COMPLEX,ALLOCATABLE                    :: StrmConnectivity(:)
     TYPE(FlowDestinationType),ALLOCATABLE  :: SupplyDest(:)
+
+    ! Safe temp variables
+    REAL(8)       :: KH, KV
+    
     
     !Initialize
     iStat = 0
@@ -921,6 +926,12 @@ CONTAINS
     Model%FaceFlows   = 0.0
     CALL Model%AppGW%GetElementDepthToGW(Model%AppGrid,Model%Stratigraphy,.TRUE.,Model%DepthToGW)
     CALL Model%AppGW%GetElementSy(Model%AppGrid,Model%Stratigraphy,iLayer=1,Sy=Model%SyElem)
+
+    !Test Safe
+    !CALL Model%AppGW%GetAquiferKh(Kh)
+    !CALL Model%AppGW%ReadKhKv(1, 1, KH, KV)
+    !write(*,*) 'KH',KH,'KV',KV
+    CALL Model%SetConductivity2StreamNodes()
     
     !Unsaturated zone
     CALL Model%AppUnsatZone%New(lForInquiry,ProjectFileNames(SIM_UnsatZoneDataFileID),Model%cSIMWorkingDirectory,Model%AppGrid,Model%Stratigraphy,Model%TimeStep,Model%NTIME,cIWFMVersion,Model%DepthToGW,iStat)
@@ -5126,6 +5137,7 @@ CONTAINS
 
 ! ***** CHECK CONVERGENCE OF ITERATIVE SOLUTION METHODS
             CALL EchoProgress('Checking convergence')
+            write(*,*) 'Iteration', ITERX
             CALL Convergence(ITERX,Model%Convergence,Model%AppGrid,Model%Stratigraphy,Model%TimeStep,Model%Matrix,Model%AppStream,Model%AppLake,Model%AppGW,lEndIteration,iStat)
             IF (iStat .EQ. -1) RETURN
             IF (lEndIteration) EXIT
@@ -5565,5 +5577,48 @@ CONTAINS
     CALL Model%AppGW%RestorePumpingToReadValues(Model%AppGrid,Model%Stratigraphy)
     
   END SUBROUTINE RestorePumpingToReadValues
+    
+  ! -------------------------------------------------------------
+  ! --- SET HYDRAULIC CONDUCTIVITY TO STREAM NODES (SAFE)
+  ! -------------------------------------------------------------
+  SUBROUTINE SetConductivity2StreamNodes(Model) !,AppStream
+    CLASS(ModelType)    :: Model
+    INTEGER,ALLOCATABLE :: GWNodes(:)
+    REAL(8),ALLOCATABLE :: Kh(:)
+    REAL(8),ALLOCATABLE :: Kv(:)
+    REAL(8)             :: rKH, rKV
+    INTEGER :: iVer, indxNode, istat, ilayer
+    !CLASS(ModelType)    :: AppStream
+    iVer = Model%AppStream%GetINTVersion(Model%AppStream)
+    write(*,*) 'Stream Version', iVer
+    IF (iVer == 411) THEN
+      ! A basic assumption for this code is that the stream nodes are stored 
+      ! in the same order in all properties such as iGWNode, iLayer, Conductance etc.
+      ! Also it is assumed that iGWNode(1) is the groundwater node for the IR 1 
+      ! iGWNode(2) -> IR=2 and so on so forth. 
+
+
+      CALL Model%StrmGWConnector%GetAllGWNodes(GWNodes)
+      !write(*,*) 'NstreamNodes', SIZE(GWNodes)
+      ALLOCATE( Kh(SIZE(GWNodes)), Kv(SIZE(GWNodes)) )
+      !write(*,*) 'Kh size', SIZE(Kh), 'Kv size', SIZE(Kh)
+
+      
+      DO indxNode=1,SIZE(GWNodes)
+        ilayer = Model%StrmGWConnector%GetLayer(indxNode)
+        CALL Model%AppGW%ReadKhKv(GWNodes(indxNode), ilayer, rKH, rKV)
+        Kh(indxNode) = rKH
+        Kv(indxNode) = rKV
+        !write(*,*) 'Index', GWNodes(indxNode), 'Kh', rKH, 'Kv', rKV
+      END DO
+
+      !DO indxNode=1,SIZE(Kh)
+      !  write(*,*)  'Kh', Kh(indxNode), 'Kv', Kv(indxNode)
+      !END DO
+
+      CALL Model%StrmGWConnector%Set_KH_KV(Kh,Kv,istat)
+    END IF
+
+  END SUBROUTINE SetConductivity2StreamNodes
     
 END MODULE

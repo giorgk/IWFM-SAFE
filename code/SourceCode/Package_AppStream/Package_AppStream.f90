@@ -51,7 +51,8 @@ MODULE Package_AppStream
   USE StrmHydrograph              , ONLY: iHydFlow                                         
   USE Class_BaseAppStream         , ONLY: BaseAppStreamType                                
   USE Class_AppStream_v40         , ONLY: AppStream_v40_Type                               
-  USE Class_AppStream_v41         , ONLY: AppStream_v41_Type                               
+  USE Class_AppStream_v41         , ONLY: AppStream_v41_Type
+  USE Class_AppStream_v411         , ONLY: AppStream_v411_Type                               
   USE Class_AppStream_v42         , ONLY: AppStream_v42_Type                               
   USE Class_AppStream_v421        , ONLY: AppStream_v421_Type                               
   USE Class_AppStream_v50         , ONLY: AppStream_v50_Type                               
@@ -166,7 +167,8 @@ MODULE Package_AppStream
       PROCEDURE,PASS   :: GetHeads                          
       PROCEDURE,PASS   :: GetStages                        
       PROCEDURE,PASS   :: GetHead_AtOneNode                                     
-      PROCEDURE,NOPASS :: GetVersion                                          
+      PROCEDURE,NOPASS :: GetVersion
+      PROCEDURE,NOPASS :: GetINTVersion                                              
       PROCEDURE,PASS   :: GetBottomElevations              => AppStream_GetBottomElevations          
       PROCEDURE,PASS   :: GetSubregionalRecvLosses         => AppStream_GetSubregionalRecvLosses     
       PROCEDURE,PASS   :: GetStrmConnectivityInGWNodes     => AppStream_GetStrmConnectivityInGWNodes 
@@ -288,6 +290,12 @@ CONTAINS
             IF (iStat .EQ. -1) RETURN
             AppStream%iVersion = 41
             AppStream%lDefined = .TRUE.
+        CASE ('4.11')
+            ALLOCATE(AppStream_v411_Type :: AppStream%Me)
+            CALL AppStream%Me%New(cFileName,AppGrid,Stratigraphy,IsRoutedStreams,StrmGWConnector,StrmLakeConnector,iStat)
+            IF (iStat .EQ. -1) RETURN
+            AppStream%iVersion = 411
+            AppStream%lDefined = .TRUE.
         CASE ('4.2')
             ALLOCATE(AppStream_v42_Type :: AppStream%Me)
             CALL AppStream%Me%New(cFileName,AppGrid,Stratigraphy,IsRoutedStreams,StrmGWConnector,StrmLakeConnector,iStat)
@@ -370,6 +378,8 @@ CONTAINS
             IF (AppStream%iVersion .NE. 40) ErrorCode = 1
         CASE ('4.1')
             IF (AppStream%iVersion .NE. 41) ErrorCode = 1
+        CASE ('4.11')
+            IF (AppStream%iVersion .NE. 411) ErrorCode = 1
         CASE ('4.2')
             IF (AppStream%iVersion .NE. 42) ErrorCode = 1
         CASE ('4.21')
@@ -431,6 +441,12 @@ CONTAINS
             CALL AppStream%Me%New(BinFile,iStat)
             IF (iStat .EQ. -1) RETURN
             AppStream%iVersion = 41
+            AppStream%lDefined = .TRUE.
+        CASE (411)
+            ALLOCATE(AppStream_v411_Type :: AppStream%Me)
+            CALL AppStream%Me%New(BinFile,iStat)
+            IF (iStat .EQ. -1) RETURN
+            AppStream%iVersion = 411
             AppStream%lDefined = .TRUE.
         CASE (42)
             ALLOCATE(AppStream_v42_Type :: AppStream%Me)
@@ -509,6 +525,12 @@ CONTAINS
             IF (iStat .EQ. -1) RETURN
             AppStream%iVersion = 41
             AppStream%lDefined = .TRUE.
+        CASE (411)
+            ALLOCATE(AppStream_v411_Type :: AppStream%Me)
+            CALL AppStream%Me%New(IsForInquiry,cFileName,cSimWorkingDirectory,TimeStep,NTIME,iLakeIDs,AppGrid,Stratigraphy,BinFile,StrmLakeConnector,StrmGWConnector,iStat)
+            IF (iStat .EQ. -1) RETURN
+            AppStream%iVersion = 411
+            AppStream%lDefined = .TRUE.
         CASE (42)
             ALLOCATE(AppStream_v42_Type :: AppStream%Me)
             CALL AppStream%Me%New(IsForInquiry,cFileName,cSimWorkingDirectory,TimeStep,NTIME,iLakeIDs,AppGrid,Stratigraphy,BinFile,StrmLakeConnector,StrmGWConnector,iStat)
@@ -583,6 +605,12 @@ CONTAINS
             CALL AppStream%Me%New(IsRoutedStreams,IsForInquiry,cPPFileName,cSimFileName,cSimWorkingDirectory,AppGrid,Stratigraphy,TimeStep,NTIME,iLakeIDs,StrmLakeConnector,StrmGWConnector,iStat)
             IF (iStat .EQ. -1) RETURN
             AppStream%iVersion = 41
+            AppStream%lDefined = .TRUE.
+        CASE ('4.11')
+            ALLOCATE(AppStream_v411_Type :: AppStream%Me)
+            CALL AppStream%Me%New(IsRoutedStreams,IsForInquiry,cPPFileName,cSimFileName,cSimWorkingDirectory,AppGrid,Stratigraphy,TimeStep,NTIME,iLakeIDs,StrmLakeConnector,StrmGWConnector,iStat)
+            IF (iStat .EQ. -1) RETURN
+            AppStream%iVersion = 411
             AppStream%lDefined = .TRUE.
         CASE ('4.2')
             ALLOCATE(AppStream_v42_Type :: AppStream%Me)
@@ -1922,6 +1950,7 @@ CONTAINS
     !Local variables
     TYPE(AppStream_v40_Type)  :: v40
     TYPE(AppStream_v41_Type)  :: v41
+    TYPE(AppStream_v411_Type)  :: v411
     TYPE(AppStream_v42_Type)  :: v42
     TYPE(AppStream_v421_Type) :: v421
     TYPE(AppStream_v50_Type)  :: v50
@@ -1931,6 +1960,15 @@ CONTAINS
     cVrs      = TRIM(MyVersion%GetVersion()) // ' (Interface) ; ' // TRIM(v40%GetVersion()) // ', ' // TRIM(v41%GetVersion()) // ', ' // TRIM(v42%GetVersion()) // ', '  // TRIM(v421%GetVersion()) // ', ' // TRIM(v50%GetVersion()) // ' (Components)'
     
   END FUNCTION GetVersion
+
+
+  FUNCTION GetINTVersion(AppStream) RESULT(iver)
+  CLASS(AppStreamType)              :: AppStream
+    INTEGER :: iver
+
+    iver = AppStream%iVersion
+
+  END FUNCTION GetINTVersion
 
     
 

@@ -34,6 +34,7 @@ MODULE Class_StrmGWConnector
   USE Class_BaseStrmGWConnector , ONLY: BaseStrmGWConnectorType 
   USE Class_StrmGWConnector_v40
   USE Class_StrmGWConnector_v41
+  USE Class_StrmGWConnector_v411
   USE Class_StrmGWConnector_v42
   USE Class_StrmGWConnector_v421
   USE Class_StrmGWConnector_v50
@@ -94,6 +95,7 @@ MODULE Class_StrmGWConnector
       PROCEDURE,PASS :: ComputeStrmGWFlow_AtMinHead
       PROCEDURE,PASS :: Simulate
       PROCEDURE,PASS :: RegisterWithMatrix
+      PROCEDURE,PASS :: Set_KH_KV
       GENERIC        :: New      => ReadPreprocessedData              , &
                                     AddGWNodes 
   END TYPE StrmGWConnectorType
@@ -156,6 +158,13 @@ CONTAINS
             IF (iStat .EQ. -1) RETURN
             Connector%Me%iVersion = iVersion
             Connector%lDefined    = .TRUE.
+
+        CASE (411)
+            ALLOCATE (StrmGWConnector_v411_Type :: Connector%Me)
+            CALL Connector%Me%New(InFile,iStat)
+            IF (iStat .EQ. -1) RETURN
+            Connector%Me%iVersion = iVersion
+            Connector%lDefined    = .TRUE.
             
         CASE (42)
             ALLOCATE (StrmGWConnector_v42_Type :: Connector%Me)
@@ -211,6 +220,13 @@ CONTAINS
             IF (iStat .EQ. -1) RETURN
             Connector%Me%iVersion = iVersion
             Connector%lDefined    = .TRUE.
+
+        CASE (411)
+            ALLOCATE (StrmGWConnector_v411_Type :: Connector%Me)
+            CALL Connector%Me%New(iGWNodes,iLayers,iStat)
+            IF (iStat .EQ. -1) RETURN
+            Connector%Me%iVersion = iVersion
+            Connector%lDefined    = .TRUE.
             
         CASE (42)
             CALL SetLastMessage('AddGWNodes method is not defined for stream-groundwater interaction component version 4.2!',iFatal,ThisProcedure)
@@ -249,6 +265,10 @@ CONTAINS
             
         CASE (41)
             CALL SetLastMessage('AddGWNodeToStrmNode method is not defined for stream-groundwater interaction component version 4.1!',iFatal,ThisProcedure) 
+            iStat = -1
+
+        CASE (411)
+            CALL SetLastMessage('AddGWNodeToStrmNode method is not defined for stream-groundwater interaction component version 4.11!',iFatal,ThisProcedure) 
             iStat = -1
             
         CASE (42)
@@ -815,6 +835,17 @@ CONTAINS
     CALL Connector%Me%RegisterWithMatrix(StrmConnectivity,AppGrid,Matrix,iStat)
     
   END SUBROUTINE RegisterWithMatrix
+
+  SUBROUTINE Set_KH_KV(Connector, Kh, Kv, iStat)
+    CLASS(StrmGWConnectorType)  :: Connector
+    REAL(8),INTENT(IN)          :: Kh(:), Kv(:)
+    INTEGER,INTENT(OUT)         :: iStat
+
+    IF (Connector%lDefined) THEN
+      CALL Connector%Me%Set_KH_KV(Kh, Kv, iStat)
+    END IF
+
+  END SUBROUTINE
 
 
 END MODULE

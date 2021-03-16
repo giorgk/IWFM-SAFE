@@ -44,6 +44,7 @@ PROGRAM IWFM_F1
       CALL LogLastMessage()
       
   ELSE
+      write(*,*) "===== SAFE EXPERIMENTS ======"
       !Instantiate the static component of the model
       CALL Model%New('',lRoutedStreams=.TRUE.,lPrintBinFile=.TRUE.,iStat=iStat)
       IF (iStat .EQ. -1) CALL LogLastMessage()

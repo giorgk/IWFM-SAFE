@@ -111,6 +111,7 @@ MODULE Class_StrmGWConnector_v42
       PROCEDURE,PASS :: Simulate                                 => StrmGWConnector_v42_Simulate
       PROCEDURE,PASS :: CompileConductance                       => StrmGWConnector_v42_CompileConductance
       PROCEDURE,PASS :: ConvertTimeUnit                          => StrmGWConnector_v42_ConvertTimeUnit               !Overrides the original method from base class
+      PROCEDURE,PASS :: Set_KH_KV                                => StrmGWConnector_v42_Set_KH_KV
   END TYPE StrmGWConnector_v42_Type
     
   
@@ -979,6 +980,13 @@ CONTAINS
         Connector%GWNodeList(indx)%Conductance = Connector%GWNodeList(indx)%Conductance * Factor
     END DO
 
-  END SUBROUTINE StrmGWConnector_v42_ConvertTimeUnit   
+  END SUBROUTINE StrmGWConnector_v42_ConvertTimeUnit
+  
+  SUBROUTINE StrmGWConnector_v42_Set_KH_KV(Connector, Kh, Kv, iStat)
+    CLASS(StrmGWConnector_v42_Type)    :: Connector
+    REAL(8),INTENT(IN)                  :: Kh(:), Kv(:)
+    INTEGER,INTENT(OUT)                 :: iStat
+    iStat = 0;
+  END SUBROUTINE StrmGWConnector_v42_Set_KH_KV
   
 END MODULE

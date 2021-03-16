@@ -5,3 +5,15 @@
 
 # ignore the folder where I put all the communication with Hubert
 /Examples/test1/HubertDocs/*
+
+# From the code folders ignore everything that is generated at compile time
+/code/Budget/*
+!/code/Budget/.vfproj
+/code/PreProcessor/*
+!/code/PreProcessor/.vfproj
+/code/Simulation/*
+!/code/Simulation/.vfproj
+/code/Simulation_Parallel/*
+!/code/Simulation_Parallel/.vfproj
+/code/ZBudget/*
+!/code/ZBudget/.vfproj

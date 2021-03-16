@@ -50,6 +50,9 @@ PROGRAM IWFM_F2
       CALL LogLastMessage()
   
   ELSE
+      ! Just check the compilation process
+      write(*,*) "SAFE EXPERIMENTATIONS"
+      
       !Instantaite model
       CALL Model%New('',lForInquiry=.FALSE.,iStat=iStat)
            

@@ -109,9 +109,6 @@
 		<Filter Name="Package_AppSmallWatershed">
 		<File RelativePath="..\SourceCode\Package_AppSmallWatershed\Package_AppSmallWatershed.f90"/></Filter>
 		<Filter Name="Package_AppStream">
-		<Filter Name="Version_4.21">
-		<File RelativePath="..\SourceCode\Package_AppStream\VERSION_4.21\AppStream_v421_Revision.fi"/>
-		<File RelativePath="..\SourceCode\Package_AppStream\VERSION_4.21\Class_AppStream_v421.f90"/></Filter>
 		<Filter Name="Version_4.0">
 		<File RelativePath="..\SourceCode\Package_AppStream\VERSION_4.0\AppStream_v40_Revision.fi"/>
 		<File RelativePath="..\SourceCode\Package_AppStream\VERSION_4.0\Class_AppStream_v40.f90"/></Filter>
@@ -119,9 +116,16 @@
 		<File RelativePath="..\SourceCode\Package_AppStream\VERSION_4.1\AppStream_v41_Revision.fi"/>
 		<File RelativePath="..\SourceCode\Package_AppStream\VERSION_4.1\Class_AppStream_v41.f90"/>
 		<File RelativePath="..\SourceCode\Package_AppStream\VERSION_4.1\Class_StrmNode_v41.f90"/></Filter>
+		<Filter Name="Version_4.11">
+		<File RelativePath="..\SourceCode\Package_AppStream\VERSION_4.11\AppStream_v411_Revision.fi"/>
+		<File RelativePath="..\SourceCode\Package_AppStream\VERSION_4.11\Class_AppStream_v411.f90"/>
+		<File RelativePath="..\SourceCode\Package_AppStream\VERSION_4.11\Class_StrmNode_v411.f90"/></Filter>
 		<Filter Name="Version_4.2">
 		<File RelativePath="..\SourceCode\Package_AppStream\VERSION_4.2\AppStream_v42_Revision.fi"/>
 		<File RelativePath="..\SourceCode\Package_AppStream\VERSION_4.2\Class_AppStream_v42.f90"/></Filter>
+		<Filter Name="Version_4.21">
+		<File RelativePath="..\SourceCode\Package_AppStream\VERSION_4.21\AppStream_v421_Revision.fi"/>
+		<File RelativePath="..\SourceCode\Package_AppStream\VERSION_4.21\Class_AppStream_v421.f90"/></Filter>
 		<Filter Name="Version_5.0">
 		<File RelativePath="..\SourceCode\Package_AppStream\VERSION_5.0\AppStream_v50_Revision.fi"/>
 		<File RelativePath="..\SourceCode\Package_AppStream\VERSION_5.0\Class_AppStream_v50.f90"/>
@@ -154,6 +158,7 @@
 		<File RelativePath="..\SourceCode\Package_ComponentConnectors\StrmGWConnector\Class_StrmGWConnector.f90"/>
 		<File RelativePath="..\SourceCode\Package_ComponentConnectors\StrmGWConnector\Class_StrmGWConnector_v40.f90"/>
 		<File RelativePath="..\SourceCode\Package_ComponentConnectors\StrmGWConnector\Class_StrmGWConnector_v41.f90"/>
+		<File RelativePath="..\SourceCode\Package_ComponentConnectors\StrmGWConnector\Class_StrmGWConnector_v411.f90"/>
 		<File RelativePath="..\SourceCode\Package_ComponentConnectors\StrmGWConnector\Class_StrmGWConnector_v42.f90"/>
 		<File RelativePath="..\SourceCode\Package_ComponentConnectors\StrmGWConnector\Class_StrmGWConnector_v421.f90"/>
 		<File RelativePath="..\SourceCode\Package_ComponentConnectors\StrmGWConnector\Class_StrmGWConnector_v50.f90"/></Filter>
