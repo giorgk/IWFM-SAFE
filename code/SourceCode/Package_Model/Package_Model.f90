@@ -5073,6 +5073,7 @@ CONTAINS
         DO
             CALL Model%Matrix%ResetToZero()
             ITERX = ITERX + 1
+            write(99,*) 'Iteration ', ITERX
       
 ! ***** GET GW HEAD VALUES TO BE USED IN DIFFERENT COMPONENTS
             CALL Model%AppGW%GetHeads(lPrevious=.FALSE. , Heads=Model%GWHeads)
@@ -5138,6 +5139,7 @@ CONTAINS
 ! ***** CHECK CONVERGENCE OF ITERATIVE SOLUTION METHODS
             CALL EchoProgress('Checking convergence')
             write(*,*) 'Iteration', ITERX
+            
             CALL Convergence(ITERX,Model%Convergence,Model%AppGrid,Model%Stratigraphy,Model%TimeStep,Model%Matrix,Model%AppStream,Model%AppLake,Model%AppGW,lEndIteration,iStat)
             IF (iStat .EQ. -1) RETURN
             IF (lEndIteration) EXIT

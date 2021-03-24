@@ -75,6 +75,8 @@ MODULE Class_StrmGWConnector_v411
       REAL(8),ALLOCATABLE :: K_cl(:) ! Conductivity of clogging layer
       REAL(8),ALLOCATABLE :: L(:) ! Representative length for each stream node
       REAL(8)           :: CondTemp ! This stores the compiled conductivity of the first node and it is used to calculate the time factor during simulation
+
+      LOGICAL           :: bUseSafe ! A flag to indicate to use the safe of IWFM method
       !PRIVATE
   CONTAINS 
       PROCEDURE,PASS :: Simulate           => StrmGWConnector_v411_Simulate
@@ -125,6 +127,8 @@ CONTAINS
     REAL(8)                       :: rNodeArea
     
     !Initialize
+    Connector%bUseSafe = .FALSE.
+
     iStat      = 0
     lProcessed = .FALSE.
     CALL Connector%GetAllGWNodes(iGWNodes)
@@ -272,6 +276,9 @@ CONTAINS
                          Gamma_Q, rho_anis, rStrmGWFlow_SAFE, rTimeFactor, rConductance_SAFE
     INTEGER,PARAMETER :: iCompIDs(2) = [f_iStrmComp , f_iGWComp]
     
+    
+    
+    
     !Update matrix equations
     DO indxStrm=1,SIZE(rStrmHeads)
         !Corresponding GW node
@@ -349,26 +356,36 @@ CONTAINS
         !Calculate stream-gw interaction and update of Jacobian
         !--------------------------------------------
         rHeadDiff   = rStrmHeads(indxStrm) - MAX(rGWHead,Connector%rDisconnectElev(indxStrm))
-        rStrmGWFlow = rConductance * rHeadDiff
+        
+        IF (Connector%bUseSafe == .TRUE.) THEN
+            rStrmGWFlow_SAFE = rConductance_SAFE  * rHeadDiff
+            rStrmGWFlow = rConductance_SAFE  * rHeadDiff
+        ELSE
+            rStrmGWFlow = rConductance * rHeadDiff
+        ENDIF
 
-        rStrmGWFlow_SAFE = rConductance_SAFE  * rHeadDiff
 !        write(*,*) 'rStrmGWFlow_SAFE', rStrmGWFlow_SAFE
         
         !Stream is gaining; no need to worry about drying stream (i.e. stream-gw flow is not a function of upstream flows)
         !Also, WetPerimeter is a function of gw head
         IF (rStrmGWFlow .LT. 0.0) THEN
-            !Connector%StrmGWFlow(indxStrm) = rStrmGWFlow        ! Original line of 4.1
-            Connector%StrmGWFlow(indxStrm) = rStrmGWFlow_SAFE    ! Safe replacement
+            IF (Connector%bUseSafe == .TRUE.) THEN
+                Connector%StrmGWFlow(indxStrm) = rStrmGWFlow_SAFE    ! Safe replacement
+            ELSE
+                Connector%StrmGWFlow(indxStrm) = rStrmGWFlow        ! Original line of 4.1
+            END IF
             iNodes_Connect(1)              = indxStrm
             iNodes_Connect(2)              = iGWNode
             
             !Update Jacobian - entries for stream node 
-            ! rUpdateCOEFF_Keep(1) = rConductance               ! Original line of 4.1
-            rUpdateCOEFF_Keep(1) = rConductance_SAFE
-            ! Original line of 4.1
-            ! rUpdateCOEFF_Keep(2) = rUnitConductance * rdWetPerimeter * rHeadDiff - 0.5d0 * rConductance * (1d0+rDiff_GW/rDiffGWSQRT) 
-            ! Safe replacement ( Due to the difficulty to calculate the derivate of the safe conductance we will treat it as constant)
-            rUpdateCOEFF_Keep(2) = - 0.5d0 * rConductance_SAFE * (1d0+rDiff_GW/rDiffGWSQRT)
+            IF (Connector%bUseSafe == .TRUE.) THEN
+                rUpdateCOEFF_Keep(1) = rConductance_SAFE
+                ! Safe replacement ( Due to the difficulty to calculate the derivate of the safe conductance we will treat it as constant)
+                rUpdateCOEFF_Keep(2) = - 0.5d0 * rConductance_SAFE * (1d0+rDiff_GW/rDiffGWSQRT)
+            ELSE
+                rUpdateCOEFF_Keep(1) = rConductance               ! Original line of 4.1
+                rUpdateCOEFF_Keep(2) = rUnitConductance * rdWetPerimeter * rHeadDiff - 0.5d0 * rConductance * (1d0+rDiff_GW/rDiffGWSQRT) 
+            END IF
             
             rUpdateCOEFF         = rUpdateCOEFF_Keep
             CALL Matrix%UpdateCOEFF(f_iStrmComp,indxStrm,2,iCompIDs,iNodes_Connect,rUpdateCOEFF)
@@ -380,22 +397,25 @@ CONTAINS
         !Stream is losing; we need to limit stream loss to available flow
         !Also, WetPerimeter is a function of stream head
         ELSE
-            ! rStrmGWFlowAdj     = rNodeAvailableFlow - rStrmGWFlow     ! Original line of 4.1
-            rStrmGWFlowAdj     = rNodeAvailableFlow - rStrmGWFlow_SAFE
+            IF (Connector%bUseSafe == .TRUE.) THEN
+                rStrmGWFlowAdj     = rNodeAvailableFlow - rStrmGWFlow_SAFE
+            ELSE
+                rStrmGWFlowAdj     = rNodeAvailableFlow - rStrmGWFlow     ! Original line of 4.1
+            END IF
             rStrmGWFlowAdjSQRT = SQRT(rStrmGWFlowAdj*rStrmGWFlowAdj + f_rSmoothMaxP)
             rDStrmGWFlowAdj    = 0.5d0 * (1d0 + rStrmGWFlowAdj / rStrmGWFlowAdjSQRT)
             iNodes_Connect(1)  = indxStrm
             iNodes_Connect(2)  = iGWNode
             
             !Update Jacobian - entries for stream node 
-            ! Original line of 4.1
-            ! rUpdateCOEFF_Keep(1) = (rConductance + rdWetPerimeter*rUnitConductance*rHeadDiff) * rDStrmGWFlowAdj
-            ! Safe replacement (without calculating the safe derivative)
-            rUpdateCOEFF_Keep(1) = rConductance_SAFE * rDStrmGWFlowAdj
-            ! Original line of 4.1
-            !rUpdateCOEFF_Keep(2) = -0.5d0 * rConductance * (1d0+rDiff_GW/rDiffGWSQRT) * rDStrmGWFlowAdj
-            ! Safe replacement (without calculating the safe derivative)
-            rUpdateCOEFF_Keep(2) = -0.5d0 * rConductance_SAFE * (1d0+rDiff_GW/rDiffGWSQRT) * rDStrmGWFlowAdj
+            IF (Connector%bUseSafe == .TRUE.) THEN
+                rUpdateCOEFF_Keep(1) = rConductance_SAFE * rDStrmGWFlowAdj
+                rUpdateCOEFF_Keep(2) = -0.5d0 * rConductance_SAFE * (1d0+rDiff_GW/rDiffGWSQRT) * rDStrmGWFlowAdj
+            ELSE
+                rUpdateCOEFF_Keep(1) = (rConductance + rdWetPerimeter*rUnitConductance*rHeadDiff) * rDStrmGWFlowAdj
+                rUpdateCOEFF_Keep(2) = -0.5d0 * rConductance * (1d0+rDiff_GW/rDiffGWSQRT) * rDStrmGWFlowAdj
+            END IF
+
             rUpdateCOEFF         = rUpdateCOEFF_Keep
             CALL Matrix%UpdateCOEFF(f_iStrmComp,indxStrm,2,iCompIDs,iNodes_Connect,rUpdateCOEFF)
             
@@ -415,6 +435,7 @@ CONTAINS
         rUpdateRHS(2) = -Connector%StrmGWFlow(indxStrm) * rFractionForGW
         CALL Matrix%UpdateRHS(iCompIDs,iNodes_RHS,rUpdateRHS)
         
+        write(99,'(I5, I5, F15.5, F15.5, F15.5, F15.5)') indxStrm, iGWNode, rUpdateRHS(1), rUpdateRHS(2), rUpdateCOEFF_Keep(1), rUpdateCOEFF_Keep(2)
     END DO
     
   END SUBROUTINE StrmGWConnector_v411_Simulate
