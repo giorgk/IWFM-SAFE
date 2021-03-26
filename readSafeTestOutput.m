@@ -25,12 +25,20 @@ while ~feof(fid)
     TSiter =  C{1,2};
     if TSiter == 1
         if NRiter > 1
-            RHS1(NRiter:end,:) = [];
-            RHS2(NRiter:end,:) = [];
+            StrmH(NRiter:end,:) = [];
+            GWH(NRiter:end,:) = [];
+            DiscEl(NRiter:end,:) = [];
+            Hs(NRiter:end,:) = [];
+            HDiff(NRiter:end,:) = [];
+            RHS(NRiter:end,:) = [];
             COEF1(NRiter:end,:) = [];
             COEF2(NRiter:end,:) = [];
-            out(timestep,1).RHS1 = RHS1;
-            out(timestep,1).RHS2 = RHS2;
+            out(timestep,1).StrmH = StrmH;
+            out(timestep,1).GWH = GWH;
+            out(timestep,1).DiscEl = DiscEl;
+            out(timestep,1).Hs = Hs;
+            out(timestep,1).HDiff = HDiff;
+            out(timestep,1).RHS = RHS;
             out(timestep,1).COEF1 = COEF1;
             out(timestep,1).COEF2 = COEF2;
             out(timestep,1).Niter = NRiter-1;
@@ -45,14 +53,34 @@ while ~feof(fid)
     for ii = 1:N
         tline = fgetl(fid);
         C = textscan(tline, '%f');
-        RHS1(NRiter,ii) = C{1,1}(3);
-        RHS2(NRiter,ii) = C{1,1}(4);
-        COEF1(NRiter,ii) = C{1,1}(5);
-        COEF2(NRiter,ii) = C{1,1}(6);
+        StrmH(NRiter,ii) = C{1,1}(3);
+        GWH(NRiter,ii) = C{1,1}(4);
+        DiscEl(NRiter,ii) = C{1,1}(5);
+        Hs(NRiter,ii) = C{1,1}(6);
+        HDiff(NRiter,ii) = C{1,1}(7);
+        RHS(NRiter,ii) = C{1,1}(8);
+        COEF1(NRiter,ii) = C{1,1}(9);
+        COEF2(NRiter,ii) = C{1,1}(10);
     end
     NRiter = NRiter + 1;
-    
-    
 end
+
+StrmH(NRiter:end,:) = [];
+GWH(NRiter:end,:) = [];
+DiscEl(NRiter:end,:) = [];
+Hs(NRiter:end,:) = [];
+HDiff(NRiter:end,:) = [];
+RHS(NRiter:end,:) = [];
+COEF1(NRiter:end,:) = [];
+COEF2(NRiter:end,:) = [];
+out(timestep,1).StrmH = StrmH;
+out(timestep,1).GWH = GWH;
+out(timestep,1).DiscEl = DiscEl;
+out(timestep,1).Hs = Hs;
+out(timestep,1).HDiff = HDiff;
+out(timestep,1).RHS = RHS;
+out(timestep,1).COEF1 = COEF1;
+out(timestep,1).COEF2 = COEF2;
+out(timestep,1).Niter = NRiter-1;
 
 fclose(fid);

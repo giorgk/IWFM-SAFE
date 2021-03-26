@@ -157,6 +157,14 @@ CONTAINS
     ELSE
         iStat = 0
     END IF
+
+    !Open a file to write any info that may need in the analysis
+    IF (Connector%iUseSafe .EQ. 1) THEN
+        open(99, file = 'safe_test.dat', status = 'UNKNOWN')
+    ELSE
+        open(99, file = 'iwfm_test.dat', status = 'UNKNOWN')
+    END IF
+
     
     
     DO indxNode=1,NStrmNodes
@@ -447,9 +455,19 @@ CONTAINS
         rUpdateRHS(2) = -Connector%StrmGWFlow(indxStrm) * rFractionForGW
         CALL Matrix%UpdateRHS(iCompIDs,iNodes_RHS,rUpdateRHS)
         
-        write(99,'(I5, I5, F15.5, F15.5, F15.5, F15.5)') indxStrm, iGWNode, rUpdateRHS(1), rUpdateRHS(2), rUpdateCOEFF_Keep(1), rUpdateCOEFF_Keep(2)
+        write(99,'(I5, I5, F15.5, F15.5, F15.5, F15.5, F15.5, F15.5, F15.5, F15.5)') & 
+        indxStrm, iGWNode, rStrmHeads(indxStrm), rGWHead, Connector%rDisconnectElev(indxStrm), rHstage, &
+        rHeadDiff, rUpdateRHS(1), rUpdateCOEFF_Keep(1), rUpdateCOEFF_Keep(2)
     END DO
     
+    IF (Connector%iUseSafe .EQ. 1) THEN
+        write(*,*) "SAFE"
+    ELSE
+        write(*,*) "IWFM 4.1"
+    END IF
+
+
+
   END SUBROUTINE StrmGWConnector_v411_Simulate
 
   SUBROUTINE StrmGWConnector_v411_Set_KH_KV(Connector, Kh, Kv, iStat)

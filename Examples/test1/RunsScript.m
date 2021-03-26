@@ -1,10 +1,13 @@
+addpath(fullfile('..','..','..','GWToolsRpack','gwtools','Matlab'))
+addpath(fullfile('..','..'))
 % This script read the output data and puts them in a variable that can be
 % retrieved later
 %% Base simulation model
 idx = 1;
-IWFM41(idx,1).Desc='Base';
+IWFM41(idx,1).Desc='K_{cl} = 2';
 IWFM41(idx,1).SWGW = readStreamNodesBudget();
-IWFM41(idx,1).CONV = readSafeTestOutput('safe_test.dat');
+IWFM41(idx,1).CONV = readSafeTestOutput('iwfm_test.dat');
+IWFM41(idx,1).DH = readStreamHeadAndStage();
 %% Change Kcl to 4
 idx = 2;
 IWFM41(idx,1).Desc='K_{cl} = 4';
@@ -35,6 +38,7 @@ IWFM41(idx,1).CONV = readSafeTestOutput('safe_test.dat');
 %% SAFE
 %% Base simulation model
 idx = 1;
-SAFE(idx,1).Desc='Base';
+SAFE(idx,1).Desc='K_{cl} = 2';
 SAFE(idx,1).SWGW = readStreamNodesBudget();
 SAFE(idx,1).CONV = readSafeTestOutput('safe_test.dat');
+SAFE(idx,1).DH = readStreamHeadAndStage();

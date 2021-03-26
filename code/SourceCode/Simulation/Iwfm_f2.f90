@@ -52,8 +52,6 @@ PROGRAM IWFM_F2
   ELSE
       ! Just check the compilation process
       write(*,*) "SAFE EXPERIMENTATIONS"
-      !Open a file to write any info that may need in the analysis
-      open(99, file = 'safe_test.dat', status = 'UNKNOWN')
       
       !Instantaite model
       CALL Model%New('',lForInquiry=.FALSE.,iStat=iStat)
