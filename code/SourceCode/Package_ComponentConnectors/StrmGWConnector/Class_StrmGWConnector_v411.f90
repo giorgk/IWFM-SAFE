@@ -290,7 +290,7 @@ CONTAINS
                          rDiffGWSQRT,rStrmGWFlow,rStrmGWFlowAdj,rStrmGWFlowAdjSQRT,rDStrmGWFlowAdj,rFractionForGW,  &
                          rNodeAvailableFlow,rWetPerimeter,rdWetPerimeter,rHeadDiff,rConductance, &
                          Daq, nDp, nWp, kappa, G_flat, a1, a2, G_iso, riverWidth, rHstage, Bsafe, Delta, &
-                         Gamma_Q, rho_anis, rStrmGWFlow_SAFE, rTimeFactor, rConductance_SAFE
+                         Gamma_Q, rho_anis, rStrmGWFlow_SAFE, rTimeFactor, rConductance_SAFE, ksi_safe
     INTEGER,PARAMETER :: iCompIDs(2) = [f_iStrmComp , f_iGWComp]
     
     
@@ -349,14 +349,19 @@ CONTAINS
             ! If the node is isotropic
             Delta = 0.25*Connector%Gsafe(indxStrm) - Bsafe - 2*Daq
 !            write(*,*) 'Delta', Delta
+            Gamma_Q = G_iso / ( 1 + G_iso * ( Delta/Daq ) )
+    !        write(*,*) 'Gamma_Q', Gamma_Q
         ELSE ! if the node is anisotropic
             rho_anis = SQRT(Connector%Kv(indxStrm)/Connector%Kh(indxStrm))
 !            write(*,*) 'rho_anis', rho_anis
             Delta = 0.25*Connector%Gsafe(indxStrm) - Bsafe - 2*Daq/rho_anis
 !            write(*,*) 'Delta', Delta
+            Gamma_Q = G_iso / ( 1 + G_iso * ( Delta/Daq ) )
+!           write(*,*) 'Gamma_Q', Gamma_Q
+            ksi_safe = (1-nDp)*(1-rho_anis)
+            Gamma_Q = (1 - 0.333*ksi_safe - 0.294*ksi_safe*ksi_safe) * Gamma_Q
+!            write(*,*) 'Gamma_Q', Gamma_Q
         END IF
-        Gamma_Q = G_iso / ( 1 + G_iso * ( Delta/Daq ) )
-!        write(*,*) 'Gamma_Q', Gamma_Q
         
         ! ---- Correction for clogging layer 
         Gamma_Q = Gamma_Q / ( 1 + Gamma_Q * (Connector%Kh(indxStrm)/ Connector%K_cl(indxStrm) ) * ( Connector%e_cl(indxStrm)/(Bsafe + rHstage) ) )
@@ -404,7 +409,8 @@ CONTAINS
                 rUpdateCOEFF_Keep(2) = - 0.5d0 * rConductance_SAFE * (1d0+rDiff_GW/rDiffGWSQRT)
             ELSE
                 rUpdateCOEFF_Keep(1) = rConductance               ! Original line of 4.1
-                rUpdateCOEFF_Keep(2) = rUnitConductance * rdWetPerimeter * rHeadDiff - 0.5d0 * rConductance * (1d0+rDiff_GW/rDiffGWSQRT) 
+                rUpdateCOEFF_Keep(2) = rUnitConductance * rdWetPerimeter * rHeadDiff - 0.5d0 * rConductance * (1d0+rDiff_GW/rDiffGWSQRT)
+                !rUpdateCOEFF_Keep(2) = - 0.5d0 * rConductance * (1d0+rDiff_GW/rDiffGWSQRT) 
             END IF
             
             rUpdateCOEFF         = rUpdateCOEFF_Keep
@@ -433,6 +439,7 @@ CONTAINS
                 rUpdateCOEFF_Keep(2) = -0.5d0 * rConductance_SAFE * (1d0+rDiff_GW/rDiffGWSQRT) * rDStrmGWFlowAdj
             ELSE
                 rUpdateCOEFF_Keep(1) = (rConductance + rdWetPerimeter*rUnitConductance*rHeadDiff) * rDStrmGWFlowAdj
+                !rUpdateCOEFF_Keep(1) = rConductance * rDStrmGWFlowAdj
                 rUpdateCOEFF_Keep(2) = -0.5d0 * rConductance * (1d0+rDiff_GW/rDiffGWSQRT) * rDStrmGWFlowAdj
             END IF
 
