@@ -4217,7 +4217,7 @@ CONTAINS
     INTEGER,INTENT(IN)  :: inode,ilayer
     REAL(8), INTENT(OUT) :: KH, KV
     KH = AppGW%Nodes(inode,ilayer)%Kh
-    KV = AppGW%Nodes(inode,ilayer)%Kh
+    KV = AppGW%Nodes(inode,ilayer)%Kv
 
   END SUBROUTINE  
   

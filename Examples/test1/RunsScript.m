@@ -4,6 +4,38 @@ addpath(fullfile('..','..'))
 % retrieved later
 %% Run model
 runIWFM(0,1);
+%% ============ Runs with or without derivatives
+IWFM41.Desc = 'IWFM with Deriv';
+IWFM41.SWGW = readStreamNodesBudget();
+IWFM41.CONV = readSafeTestOutput('iwfm_test.dat');
+IWFM41.DH = readStreamHeadAndStage();
+%%
+IWFM41noDeriv.Desc = 'IWFM no Deriv';
+IWFM41noDeriv.SWGW = readStreamNodesBudget();
+IWFM41noDeriv.CONV = readSafeTestOutput('iwfm_test.dat');
+IWFM41noDeriv.DH = readStreamHeadAndStage();
+%%
+SAFEwithDeriv.Desc = 'SAFE with IWFM Deriv';
+SAFEwithDeriv.SWGW = readStreamNodesBudget();
+SAFEwithDeriv.CONV = readSafeTestOutput('safe_test.dat');
+SAFEwithDeriv.DH = readStreamHeadAndStage();
+%%
+SAFEnoDeriv.Desc = 'SAFE no Deriv';
+SAFEnoDeriv.SWGW = readStreamNodesBudget();
+SAFEnoDeriv.CONV = readSafeTestOutput('safe_test.dat');
+SAFEnoDeriv.DH = readStreamHeadAndStage();
+%% =============================================
+figure()
+clf
+plot([IWFM41.CONV.Niter]', 'LineWidth',2, 'DisplayName',IWFM41.Desc)
+hold on
+plot([SAFEnoDeriv.CONV.Niter]', 'LineWidth',2, 'DisplayName',SAFEnoDeriv.Desc)
+plot([IWFM41noDeriv.CONV.Niter]', 'LineWidth',2, 'DisplayName',IWFM41noDeriv.Desc)
+plot([SAFEwithDeriv.CONV.Niter]', '--g', 'LineWidth',2, 'DisplayName',SAFEwithDeriv.Desc)
+grid on
+xlabel('Time Step')
+ylabel('# Newton Raphson Iterations')
+legend('Location',"best")
 %% Base simulation model
 idx = 1;
 runIWFM(0,1);

@@ -5611,7 +5611,7 @@ CONTAINS
         CALL Model%AppGW%ReadKhKv(GWNodes(indxNode), ilayer, rKH, rKV)
         Kh(indxNode) = rKH
         Kv(indxNode) = rKV
-        !write(*,*) 'Index', GWNodes(indxNode), 'Kh', rKH, 'Kv', rKV
+        write(*,*) 'Index', GWNodes(indxNode), 'Kh', rKH, 'Kv', rKV
       END DO
 
       !DO indxNode=1,SIZE(Kh)

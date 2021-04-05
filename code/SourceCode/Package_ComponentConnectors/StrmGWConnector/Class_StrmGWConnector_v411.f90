@@ -311,6 +311,7 @@ CONTAINS
         rDiffGWSQRT = SQRT(rDiff_GW*rDiff_GW + f_rSmoothMaxP)
         
         !Wetted perimeter and conductance
+        write(*,*) 'rGWHead', rGWHead, 'rStrmHeads(indxStrm)', rStrmHeads(indxStrm)
         CALL WetPerimeterFunction(indxStrm)%EvaluateAndDerivative(MAX(rGWHead,rStrmHeads(indxStrm)),rWetPerimeter,rdWetPerimeter) 
         rConductance = rUnitConductance * rWetPerimeter
         ! The code above is the standard code for version 4.1
@@ -354,6 +355,7 @@ CONTAINS
         ELSE ! if the node is anisotropic
             rho_anis = SQRT(Connector%Kv(indxStrm)/Connector%Kh(indxStrm))
 !            write(*,*) 'rho_anis', rho_anis
+            write(*,*) 'Gsafe', Connector%Gsafe(indxStrm)
             Delta = 0.25*Connector%Gsafe(indxStrm) - Bsafe - 2*Daq/rho_anis
 !            write(*,*) 'Delta', Delta
             Gamma_Q = G_iso / ( 1 + G_iso * ( Delta/Daq ) )
@@ -405,11 +407,18 @@ CONTAINS
             !Update Jacobian - entries for stream node 
             IF (Connector%iUseSafe .EQ. 1) THEN
                 rUpdateCOEFF_Keep(1) = rConductance_SAFE
-                ! Safe replacement ( Due to the difficulty to calculate the derivate of the safe conductance we will treat it as constant)
+                ! Safe No Deriv
                 rUpdateCOEFF_Keep(2) = - 0.5d0 * rConductance_SAFE * (1d0+rDiff_GW/rDiffGWSQRT)
+                
+                ! Safe with IWFM deriv
+                !rUpdateCOEFF_Keep(2) = rUnitConductance * rdWetPerimeter * rHeadDiff - 0.5d0 * rConductance_SAFE * (1d0+rDiff_GW/rDiffGWSQRT)
             ELSE
                 rUpdateCOEFF_Keep(1) = rConductance               ! Original line of 4.1
+                
+                ! WIFM with Deriv
                 rUpdateCOEFF_Keep(2) = rUnitConductance * rdWetPerimeter * rHeadDiff - 0.5d0 * rConductance * (1d0+rDiff_GW/rDiffGWSQRT)
+                
+                ! IWFM no Deriv
                 !rUpdateCOEFF_Keep(2) = - 0.5d0 * rConductance * (1d0+rDiff_GW/rDiffGWSQRT) 
             END IF
             
@@ -435,11 +444,20 @@ CONTAINS
             
             !Update Jacobian - entries for stream node 
             IF (Connector%iUseSafe .EQ. 1) THEN
+                ! SAFE No Deriv
                 rUpdateCOEFF_Keep(1) = rConductance_SAFE * rDStrmGWFlowAdj
+                
+                ! SAFE IWFM deriv
+                !rUpdateCOEFF_Keep(1) = (rConductance_SAFE + rdWetPerimeter*rUnitConductance*rHeadDiff) * rDStrmGWFlowAdj
+                
                 rUpdateCOEFF_Keep(2) = -0.5d0 * rConductance_SAFE * (1d0+rDiff_GW/rDiffGWSQRT) * rDStrmGWFlowAdj
             ELSE
+                !IWFM with Deriv
                 rUpdateCOEFF_Keep(1) = (rConductance + rdWetPerimeter*rUnitConductance*rHeadDiff) * rDStrmGWFlowAdj
+                
+                ! IWFM no Deriv
                 !rUpdateCOEFF_Keep(1) = rConductance * rDStrmGWFlowAdj
+                
                 rUpdateCOEFF_Keep(2) = -0.5d0 * rConductance * (1d0+rDiff_GW/rDiffGWSQRT) * rDStrmGWFlowAdj
             END IF
 
