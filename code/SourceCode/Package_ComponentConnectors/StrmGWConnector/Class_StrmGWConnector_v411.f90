@@ -290,7 +290,7 @@ CONTAINS
                          rDiffGWSQRT,rStrmGWFlow,rStrmGWFlowAdj,rStrmGWFlowAdjSQRT,rDStrmGWFlowAdj,rFractionForGW,  &
                          rNodeAvailableFlow,rWetPerimeter,rdWetPerimeter,rHeadDiff,rConductance, &
                          Daq, nDp, nWp, kappa, G_flat, a1, a2, G_iso, riverWidth, rHstage, Bsafe, Delta, &
-                         Gamma_Q, rho_anis, rStrmGWFlow_SAFE, rTimeFactor, rConductance_SAFE, ksi_safe
+                         Gamma_Q, rho_anis, rStrmGWFlow_SAFE, rTimeFactor, rConductance_SAFE, ksi_safe, delta_anis, gamma_iso_D_anis, R_f, G_anis
     INTEGER,PARAMETER :: iCompIDs(2) = [f_iStrmComp , f_iGWComp]
     
     
@@ -311,7 +311,7 @@ CONTAINS
         rDiffGWSQRT = SQRT(rDiff_GW*rDiff_GW + f_rSmoothMaxP)
         
         !Wetted perimeter and conductance
-        write(*,*) 'rGWHead', rGWHead, 'rStrmHeads(indxStrm)', rStrmHeads(indxStrm)
+        !write(*,*) 'rGWHead', rGWHead, 'rStrmHeads(indxStrm)', rStrmHeads(indxStrm)
         CALL WetPerimeterFunction(indxStrm)%EvaluateAndDerivative(MAX(rGWHead,rStrmHeads(indxStrm)),rWetPerimeter,rdWetPerimeter) 
         rConductance = rUnitConductance * rWetPerimeter
         ! The code above is the standard code for version 4.1
@@ -354,16 +354,21 @@ CONTAINS
     !        write(*,*) 'Gamma_Q', Gamma_Q
         ELSE ! if the node is anisotropic
             rho_anis = SQRT(Connector%Kv(indxStrm)/Connector%Kh(indxStrm))
-!            write(*,*) 'rho_anis', rho_anis
-            write(*,*) 'Gsafe', Connector%Gsafe(indxStrm)
+            delta_anis = 2*(1/rho_anis - 1)
+            gamma_iso_D_anis = G_iso/(1 + G_iso*delta_anis)
+            ksi_safe = (1-nDp)*(1-rho_anis)
+            R_f = 1 - 0.333*ksi_safe - 0.294*ksi_safe*ksi_safe
+            G_anis = R_f*gamma_iso_D_anis
+            
             Delta = 0.25*Connector%Gsafe(indxStrm) - Bsafe - 2*Daq/rho_anis
 !            write(*,*) 'Delta', Delta
-            Gamma_Q = G_iso / ( 1 + G_iso * ( Delta/Daq ) )
-!           write(*,*) 'Gamma_Q', Gamma_Q
-            ksi_safe = (1-nDp)*(1-rho_anis)
-            Gamma_Q = (1 - 0.333*ksi_safe - 0.294*ksi_safe*ksi_safe) * Gamma_Q
-!            write(*,*) 'Gamma_Q', Gamma_Q
+            Gamma_Q = G_anis / ( 1 + G_anis * ( Delta/Daq ) )
         END IF
+
+        if (Gamma_Q .LT. 0) THEN
+            write(*,*) 'Negative Gamma', Gamma_Q
+        END IF
+        
         
         ! ---- Correction for clogging layer 
         Gamma_Q = Gamma_Q / ( 1 + Gamma_Q * (Connector%Kh(indxStrm)/ Connector%K_cl(indxStrm) ) * ( Connector%e_cl(indxStrm)/(Bsafe + rHstage) ) )
@@ -415,7 +420,7 @@ CONTAINS
             ELSE
                 rUpdateCOEFF_Keep(1) = rConductance               ! Original line of 4.1
                 
-                ! WIFM with Deriv
+                ! IWFM with Deriv
                 rUpdateCOEFF_Keep(2) = rUnitConductance * rdWetPerimeter * rHeadDiff - 0.5d0 * rConductance * (1d0+rDiff_GW/rDiffGWSQRT)
                 
                 ! IWFM no Deriv

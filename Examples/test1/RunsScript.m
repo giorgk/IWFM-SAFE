@@ -30,7 +30,7 @@ clf
 plot([IWFM41.CONV.Niter]', 'LineWidth',2, 'DisplayName',IWFM41.Desc)
 hold on
 plot([SAFEnoDeriv.CONV.Niter]', 'LineWidth',2, 'DisplayName',SAFEnoDeriv.Desc)
-plot([IWFM41noDeriv.CONV.Niter]', 'LineWidth',2, 'DisplayName',IWFM41noDeriv.Desc)
+plot([IWFM41noDeriv.CONV.Niter]', '--', 'LineWidth',2, 'DisplayName',IWFM41noDeriv.Desc)
 plot([SAFEwithDeriv.CONV.Niter]', '--g', 'LineWidth',2, 'DisplayName',SAFEwithDeriv.Desc)
 grid on
 xlabel('Time Step')
@@ -149,3 +149,68 @@ SAFE(idx,1).Desc='K_{cl} = 10';
 SAFE(idx,1).SWGW = readStreamNodesBudget();
 SAFE(idx,1).CONV = readSafeTestOutput('safe_test.dat');
 SAFE(idx,1).DH = readStreamHeadAndStage();
+%%
+idx = 1;
+runIWFM(0,1);
+IWFM41(idx,1).Desc='KH/KV = 1';
+IWFM41(idx,1).SWGW = readStreamNodesBudget();
+IWFM41(idx,1).CONV = readSafeTestOutput('iwfm_test.dat');
+IWFM41(idx,1).DH = readStreamHeadAndStage();
+%%
+idx = 2;
+runIWFM(0,1);
+IWFM41(idx,1).Desc='KH/KV = 10';
+IWFM41(idx,1).SWGW = readStreamNodesBudget();
+IWFM41(idx,1).CONV = readSafeTestOutput('iwfm_test.dat');
+IWFM41(idx,1).DH = readStreamHeadAndStage();
+%%
+idx = 3;
+runIWFM(0,1);
+IWFM41(idx,1).Desc='KH/KV = 100';
+IWFM41(idx,1).SWGW = readStreamNodesBudget();
+IWFM41(idx,1).CONV = readSafeTestOutput('iwfm_test.dat');
+IWFM41(idx,1).DH = readStreamHeadAndStage();
+%%
+idx = 1;
+runIWFM(0,1);
+SAFE(idx,1).Desc='KH/KV = 1';
+SAFE(idx,1).SWGW = readStreamNodesBudget();
+SAFE(idx,1).CONV = readSafeTestOutput('safe_test.dat');
+SAFE(idx,1).DH = readStreamHeadAndStage();
+%%
+idx = 2;
+runIWFM(0,1);
+SAFE(idx,1).Desc='KH/KV = 10';
+SAFE(idx,1).SWGW = readStreamNodesBudget();
+SAFE(idx,1).CONV = readSafeTestOutput('safe_test.dat');
+SAFE(idx,1).DH = readStreamHeadAndStage();
+%%
+idx = 3;
+runIWFM(0,1);
+SAFE(idx,1).Desc='KH/KV = 100';
+SAFE(idx,1).SWGW = readStreamNodesBudget();
+SAFE(idx,1).CONV = readSafeTestOutput('safe_test.dat');
+SAFE(idx,1).DH = readStreamHeadAndStage();
+%%
+figure()
+clf
+hold on
+for ii = 1:3
+    plot(IWFM41(ii,1).SWGW.GwIn(2:end,8),'b','linewidth',2)
+    plot(SAFE(ii,1).SWGW.GwIn(2:end,8),'r','linewidth',2)
+end
+grid on
+xlabel('Stream node ID')
+ylabel('m^3/month')
+%%
+figure()
+clf
+hold on
+for ii = 1:3
+    plot(IWFM41(ii,1).DH.Hs(:,8),'b','linewidth',2)
+    plot(SAFE(ii,1).DH.Hs(:,8),'r','linewidth',2)
+end
+grid on
+xlabel('Stream node ID')
+ylabel('m^3/month')
+title('Stream head')
