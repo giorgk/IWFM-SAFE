@@ -312,7 +312,11 @@ CONTAINS
         
         !Wetted perimeter and conductance
         !write(*,*) 'rGWHead', rGWHead, 'rStrmHeads(indxStrm)', rStrmHeads(indxStrm)
-        CALL WetPerimeterFunction(indxStrm)%EvaluateAndDerivative(MAX(rGWHead,rStrmHeads(indxStrm)),rWetPerimeter,rdWetPerimeter) 
+        IF (Connector%iUseSafe .EQ. 1) THEN
+            CALL WetPerimeterFunction(indxStrm)%EvaluateAndDerivative(rStrmHeads(indxStrm),rWetPerimeter,rdWetPerimeter)
+        ELSE
+            CALL WetPerimeterFunction(indxStrm)%EvaluateAndDerivative(MAX(rGWHead,rStrmHeads(indxStrm)),rWetPerimeter,rdWetPerimeter) 
+        END IF
         rConductance = rUnitConductance * rWetPerimeter
         ! The code above is the standard code for version 4.1
         
@@ -356,7 +360,7 @@ CONTAINS
             rho_anis = SQRT(Connector%Kv(indxStrm)/Connector%Kh(indxStrm))
             delta_anis = 2*(1/rho_anis - 1)
             gamma_iso_D_anis = G_iso/(1 + G_iso*delta_anis)
-            ksi_safe = (1-nDp)*(1-rho_anis)
+            ksi_safe = (1 - SQRT(nDp))*(1 - SQRT(rho_anis))
             R_f = 1 - 0.333*ksi_safe - 0.294*ksi_safe*ksi_safe
             G_anis = R_f*gamma_iso_D_anis
             

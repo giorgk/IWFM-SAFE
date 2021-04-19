@@ -30,12 +30,32 @@ clf
 plot([IWFM41.CONV.Niter]', 'LineWidth',2, 'DisplayName',IWFM41.Desc)
 hold on
 plot([SAFEnoDeriv.CONV.Niter]', 'LineWidth',2, 'DisplayName',SAFEnoDeriv.Desc)
-plot([IWFM41noDeriv.CONV.Niter]', '--', 'LineWidth',2, 'DisplayName',IWFM41noDeriv.Desc)
-plot([SAFEwithDeriv.CONV.Niter]', '--g', 'LineWidth',2, 'DisplayName',SAFEwithDeriv.Desc)
+%plot([IWFM41noDeriv.CONV.Niter]', '--', 'LineWidth',2, 'DisplayName',IWFM41noDeriv.Desc)
+%plot([SAFEwithDeriv.CONV.Niter]', '--g', 'LineWidth',2, 'DisplayName',SAFEwithDeriv.Desc)
 grid on
 xlabel('Time Step')
 ylabel('# Newton Raphson Iterations')
 legend('Location',"best")
+%% =============================================
+figure()
+clf
+ii=12;
+% plot(IWFM41.SWGW.GwIn(ii,:), 'LineWidth',2, 'DisplayName',IWFM41.Desc)
+% hold on
+% plot(SAFEnoDeriv.SWGW.GwIn(ii,:), 'LineWidth',2, 'DisplayName',SAFEnoDeriv.Desc)
+
+plot(IWFM41.CONV(12).HDiff(end,:), 'LineWidth',2, 'DisplayName',IWFM41.Desc)
+hold on
+plot(SAFEnoDeriv.CONV(12).HDiff(end,:), 'LineWidth',2, 'DisplayName',SAFEnoDeriv.Desc)
+
+
+%plot([IWFM41noDeriv.CONV.Niter]', '--', 'LineWidth',2, 'DisplayName',IWFM41noDeriv.Desc)
+%plot([SAFEwithDeriv.CONV.Niter]', '--g', 'LineWidth',2, 'DisplayName',SAFEwithDeriv.Desc)
+grid on
+xlabel('Time Step')
+ylabel('# Newton Raphson Iterations')
+legend('Location',"best")
+
 %% Base simulation model
 idx = 1;
 runIWFM(0,1);
