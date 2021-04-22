@@ -1,0 +1,189 @@
+#4.11
+C*******************************************************************************
+C
+C                        Input and Output Data File Names
+C
+C  INFLOWFL    ; Stream inflow data file (max. 1000 characters)
+C                 * Leave blank if no stream inflow data exists
+C  DIVSPECFL   ; Diversion specifications data file (max. 1000 characters)
+C                 * Leave blank if diversions are not simulated
+C  BYPSPECFL   ; Bypass specifications data file (max. 1000 characters)
+C                 * Leave blank if bypasses are not simulated
+C  DIVFL       ; Diversion data file (max. 1000 characters)
+C                 * Leave blank if diversions are not simulated
+C  STRMRCHBUDFL; HDF5 output file for stream flow budget at each 
+C                 stream reach (max. 1000 characters) 
+C                 * Leave blank if this output is not required
+C  DIVDTLBUDFL ; HDF5 output file for diversion details (max. 1000 characters)
+C                 * Leave blank if this output is not required
+C------------------------------------------------------------------------------
+C   VALUE					/ DESCRIPTION
+C------------------------------------------------------------------------------
+	Simulation\Streams\Ex2_Stream_Inflow.dat		/ INFLOWFL                       
+		/ DIVSPECFL 
+		/ BYPSPECFL
+		/ DIVFL                        
+	Results\Ex2_Stream_Budget.hdf	 	/ STRMRCHBUDFL            
+		/ DIVDTLBUDFL
+C*******************************************************************************
+C                       Stream Flow Hydrograph Output Data
+C
+C  NOUTR      ; Total number of hydrographs to be printed
+C                (NOUTR = 0 if no stream hydrograph data is to be printed)
+C  IHSQR      ; Switch for the output of stream surface elevations or stream flows; 
+C                IHSQR = 0 if output of stream flows is desired,
+C                IHSQR = 1 if output of stream stage is desired
+C  FACTVROU   ; Factor to convert simulation unit of stream flows into 
+C                intented output unit 
+C  UNITVROU   ; Output unit of stream flow (max. 10 characters long)
+C  FACTLTOU   ; Factor to convert simulation unit of stream surface 
+C                elevations into intented output unit 
+C  UNITLTOU   ; Output unit of stream surface elevation (max. 10 characters long)
+C  STHYDOUTFL ; File name for stream hydrograph output (max. 1000 characters) 
+C                 * Leave blank if this output is not required
+C
+C------------------------------------------------------------------------------
+C   VALUE                         			/ DESCRIPTION
+C------------------------------------------------------------------------------	
+		17                         			/ NOUTR
+		1                          			/ IHSQR
+		1                					/ FACTVROU
+		CB-MT/DAY                  			/ UNITVROU
+		100000                          			/ FACTLTOU
+		mm                      			/ UNITLTOU
+		Results\Ex2_Stream_hyd.dat									/ STHYDOUTFL
+C-------------------------------------------------------------------------------
+C
+C   The following lists the stream node number for hydrograph to be printed
+C   (skip if no hydrographs are to be printed, ie. NOUTR = 0)
+C
+C   IOUTR;   Stream node number for printing hydrograph output
+C   NAME ;   Name of hydrograph location (max. 30 characters)
+C
+C-------------------------------------------------------------------------------
+C    IOUTR			NAME
+C-------------------------------------------------------------------------------
+	1 RIV1
+	2 RIV2
+	3 RIV3
+	4 RIV4
+	5 RIV5
+	6 RIV6
+	7 RIV7
+	8 RIV8
+	9 RIV9
+	10 RIV10
+	11 RIV11
+	12 RIV12
+	13 RIV13
+	14 RIV14
+	15 RIV15
+	16 RIV16
+	17 RIV17
+C*******************************************************************************
+C                       Stream Flow Budget at Selected Nodes
+C
+C  NBUDR      ; Total number of stream nodes for which budget output is desired
+C                (NBUDR = 0 if no stream node budget is required)
+C  STNDBUDFL  ; Binary output file for stream node budget (max. 1000 characters)
+C                 * Leave blank if this output is not required
+C
+C------------------------------------------------------------------------------
+C   VALUE                         DESCRIPTION
+C------------------------------------------------------------------------------
+	17                         / NBUDR
+	Results\Ex2_Stream_Node_Budget.hdf                          / STNDBUDFL
+C-------------------------------------------------------------------------------
+C
+C   The following lists the stream nodes for budget output
+C   (skip if no budget output is required, ie. NBUDR = 0)
+C
+C   IBUDR;   Stream node for budget output
+C-------------------------------------------------------------------------------
+C    IBUDR
+C-------------------------------------------------------------------------------
+	1
+	2
+	3
+	4
+	5
+	6
+	7
+	8
+	9
+	10
+	11
+	12
+	13
+	14
+	15
+	16
+	17
+C*******************************************************************************
+C                       STREAM BED PARAMETERS
+C
+C     The following lists the parameters to model stream flows and stream-aquifer
+C     interaction.
+C
+C   FACTK ;   Conversion factor for stream bed conductivity
+C              It is used to convert only the spatial component of the unit; 
+C              DO NOT include the conversion factor for time component of the unit.
+C              * e.g. Unit of conductivity listed in this file = IN/DAY
+C                     Consistent unit used in simulation       = FT/MONTH 
+C                     Enter FACTK (IN/MONTH -> FT/MONTH)       = 8.33333E-02 
+C                      (conversion of DAY -> MONTH is performed automatically) 
+C   TUNITSK;  Time unit of conductivity.  This should be one of the units 
+C              recognized by HEC-DSS that are listed in the Main Control File.  
+C   FACTL ;   Conversion factor for stream bed thickness
+C   IR    ;   Stream node number
+C   CSTRM ;   Hydraulic conductivity of stream bed; [L/T]
+C   DSTRM ;   Thickness of stream bed; [L]
+C
+C------------------------------------------------------------------------------
+C   VALUE                 DESCRIPTION
+C------------------------------------------------------------------------------
+	1.0			/ FACTK
+    1DAY		/ TUNITSK
+	1.0			/ FACTL
+C------------------------------------------------------------------------------
+C      IR      WETPR     IRGW   CSTRM   DSTRM        
+C------------------------------------------------------------------------------
+	1  2 1
+	2  2 1
+	3  2 1
+	4  2 1
+	5  2 1
+	6  2 1
+	7  2 1
+	8  2 1
+	9  2 1
+	10 2 1
+	11 2 1
+	12 2 1
+	13 2 1
+	14 2 1
+	15 2 1
+	16 2 1
+	17 2 1
+C*******************************************************************************
+C
+C                Hydraulic Disconnection for Stream-Aquifer Interaction
+C
+C  INTRCTYPE   ; Assumption for hydraulic disconnection of stream and aquifer
+C                 1 = Stream and aquifer disconnects when groundwater head falls 
+C                      below the top of stream bed (i.e. stream bottom)
+C                 2 = Stream and aquifer disconnects when groundwater head falls 
+C                      below bottom of stream bed
+C
+C------------------------------------------------------------------------------
+C   VALUE                         DESCRIPTION
+C------------------------------------------------------------------------------
+	1                		   / INTRCTYPE
+C-------------------------------------------------------------------------------
+C   Use SAFE or IWFM 4.1
+C-------------------------------------------------------------------------------
+	1	 /USESAFE
+C-------------------------------------------------------------------------------
+C   Set the bottom of the geologic layer
+C-------------------------------------------------------------------------------
+	3	 /GEOLAY		

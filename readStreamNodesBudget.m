@@ -1,6 +1,6 @@
-function out = readStreamNodesBudget()
-nTimeSteps = 12;
-strm_node_bud = h5info(fullfile('Results','Ex1_Stream_Node_Budget.hdf'));
+function out = readStreamNodesBudget(filename, nTimeSteps)
+
+strm_node_bud = h5info(filename);
 Stream_col_names = strm_node_bud.Groups.Attributes(11).Value(2:end);
 strm_nodesGW = zeros(length(strm_node_bud.Datasets), nTimeSteps);
 strm_nodesUpIn = zeros(length(strm_node_bud.Datasets), nTimeSteps);

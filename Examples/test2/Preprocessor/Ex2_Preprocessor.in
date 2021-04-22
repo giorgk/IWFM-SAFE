@@ -29,7 +29,7 @@ C-----------------------------------------------------------------------------
     Simulation\Ex2_PreprocessorOut.bin       / 1: BINARY OUTPUT FOR SIMULATION (OUTPUT, REQUIRED)
     ..\test1\Preprocessor\Ex1_Elements.dat       / 2: ELEMENT CONFIGURATION FILE (INPUT, REQUIRED)
     ..\test1\Preprocessor\Ex1_Nodes.dat                               / 3: NODE X-Y COORDINATE FILE (INPUT, REQUIRED))
-    Preprocessor\Ex1_Stratigraphy.dat                        / 4: STRATIGRAPHIC DATA FILE (INPUT, REQUIRED))
+    Preprocessor\Ex2_Stratigraphy.dat                        / 4: STRATIGRAPHIC DATA FILE (INPUT, REQUIRED))
     ..\test1\Preprocessor\Ex1_StreamSpec.dat                         / 5: STREAM GEOMETRIC DATA FILE (INPUT, OPTIONAL)
                                                      / 6: LAKE DATA FILE (INPUT, OPTIONAL)
 C------------------------------------------------------------------------------

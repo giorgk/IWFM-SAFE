@@ -122,7 +122,7 @@ CONTAINS
     CHARACTER                     :: ALine*500,TimeUnitConductance*6
     LOGICAL                       :: lProcessed(NStrmNodes)
     INTEGER,ALLOCATABLE           :: iGWNodes(:)
-    INTEGER                       :: iUseSafe
+    INTEGER                       :: iUseSafe, iGeoLay
     
     ! SAFE Variables
     REAL(8)                       :: rNodeArea
@@ -164,6 +164,9 @@ CONTAINS
     ELSE
         open(99, file = 'iwfm_test.dat', status = 'UNKNOWN')
     END IF
+
+    ! Read the layer that the bottom corresponds to the geologic layer
+    CALL InFile%ReadData(iGeoLay,iStat)
 
     
     
@@ -216,8 +219,10 @@ CONTAINS
             L(indxNode-1)             = F_DISTANCE+B_DISTANCE
             Write(*,*) 'Conductivity:', Conductivity(indxNode-1), 'L', L(indxNode-1)
             
-           Write(*,*) 'iLayer:', iLayer, 'BotElev', Stratigraphy%BottomElev(iGWUpstrmNode,iLayer)
-           LayerBottomElevation(indxNode-1) = Stratigraphy%BottomElev(iGWUpstrmNode,iLayer)
+           Write(*,*) 'Geo Layer :', iLayer, 'BotElev', Stratigraphy%BottomElev(iGWUpstrmNode,iGeoLay)
+           !Write(*,*) 'iLayer 2:', iLayer, 'BotElev', Stratigraphy%BottomElev(iGWUpstrmNode,2)
+           !Write(*,*) 'iLayer 3:', iLayer, 'BotElev', Stratigraphy%BottomElev(iGWUpstrmNode,3)
+           LayerBottomElevation(indxNode-1) = Stratigraphy%BottomElev(iGWUpstrmNode,iGeoLay)
             
             rNodeArea               = AppGrid%AppNode(iGWUpstrmNode)%Area
             Wsafe(indxNode-1)       = rNodeArea/(2*(F_DISTANCE+B_DISTANCE))
