@@ -5,8 +5,8 @@
 		<Platform Name="x64"/></Platforms>
 	<Configurations>
 		<Configuration Name="Debug|Win32" TargetName="PreProcessor2015_D">
-				<Tool Name="VFFortranCompilerTool" AdditionalOptions="/fp:consistent" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" Preprocess="preprocessYes" AdditionalIncludeDirectories="$(SolutionDir)..\SourceCode\HDF5Lib\$(Platform)\$(Configuration)" F2003Semantics="true" DisableSpecificDiagnostics="8290" WarnUnusedVariables="true" BuildDependencies="true" EmitBuildDependencies="true" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDebug"/>
-				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="$(SolutionDir)..\SourceCode\HDF5Lib\$(Platform)\$(Configuration)" GenerateDebugInformation="true" SubSystem="subSystemConsole" StackReserveSize="256000000" AdditionalDependencies="libhdf5_fortran_D.lib libhdf5_D.lib libhdf5_f90cstub_D.lib libszip_D.lib libzlib_D.lib "/>
+				<Tool Name="VFFortranCompilerTool" AdditionalOptions="/fp:consistent" SuppressStartupBanner="true" DebugInformationFormat="debugLineInfoOnly" Optimization="optimizeDisabled" Preprocess="preprocessYes" AdditionalIncludeDirectories="$(SolutionDir)..\SourceCode\HDF5Lib\$(Platform)\$(Configuration);$(SolutionDir)..\SourceCode\HECLib\$(Platform)\$(Configuration)" F2003Semantics="true" DisableSpecificDiagnostics="8290" WarnUnusedVariables="true" BuildDependencies="true" EmitBuildDependencies="true" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDebug"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="$(SolutionDir)..\SourceCode\HDF5Lib\$(Platform)\$(Configuration);$(SolutionDir)..\SourceCode\HECLib\$(Platform)\$(Configuration)" GenerateDebugInformation="true" SubSystem="subSystemConsole" StackReserveSize="256000000" AdditionalDependencies="libhdf5_fortran_D.lib libhdf5_D.lib libhdf5_f90cstub_D.lib libszip_D.lib libzlib_D.lib heclib_ivf_debug.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -15,8 +15,8 @@
 				<Tool Name="VFPostBuildEventTool" CommandLine="copy /Y &quot;$(OutDir)\$(TargetName)$(TargetExt)&quot; &quot;$(ProjectDir)..\Bin&quot;"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Release|Win32" TargetName="PreProcessor2015">
-				<Tool Name="VFFortranCompilerTool" AdditionalOptions="/fp:consistent" SuppressStartupBanner="true" InterproceduralOptimizations="ipoMultiFile" Preprocess="preprocessYes" AdditionalIncludeDirectories="$(SolutionDir)..\SourceCode\HDF5Lib\$(Platform)\$(Configuration)" F2003Semantics="true" DisableSpecificDiagnostics="8290,10212"/>
-				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="$(SolutionDir)..\SourceCode\HDF5Lib\$(Platform)\$(Configuration)" SubSystem="subSystemConsole" StackReserveSize="256000000" AdditionalDependencies="libhdf5_fortran.lib libhdf5.lib libhdf5_f90cstub.lib libszip.lib libzlib.lib"/>
+				<Tool Name="VFFortranCompilerTool" AdditionalOptions="/fp:consistent" SuppressStartupBanner="true" InterproceduralOptimizations="ipoMultiFile" Preprocess="preprocessYes" AdditionalIncludeDirectories="$(SolutionDir)..\SourceCode\HDF5Lib\$(Platform)\$(Configuration);$(SolutionDir)..\SourceCode\HECLib\$(Platform)\$(Configuration)" F2003Semantics="true" DisableSpecificDiagnostics="8290,10212"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="$(SolutionDir)..\SourceCode\HDF5Lib\$(Platform)\$(Configuration);$(SolutionDir)..\SourceCode\HECLib\$(Platform)\$(Configuration)" SubSystem="subSystemConsole" StackReserveSize="256000000" AdditionalDependencies="libhdf5_fortran.lib libhdf5.lib libhdf5_f90cstub.lib libszip.lib libzlib.lib heclib_ivf_release.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -25,8 +25,8 @@
 				<Tool Name="VFPostBuildEventTool" CommandLine="copy /Y &quot;$(OutDir)\$(TargetName)$(TargetExt)&quot; &quot;$(ProjectDir)..\Bin&quot;"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Debug|x64" IntermediateDirectory="$(ProjectDir)$(PlatformName)\$(ConfigurationName)" TargetName="PreProcessor2015_x64_D">
-				<Tool Name="VFFortranCompilerTool" AdditionalOptions="/fp:consistent" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" Preprocess="preprocessYes" AdditionalIncludeDirectories="$(SolutionDir)..\SourceCode\HDF5Lib\$(Platform)\$(Configuration)" F2003Semantics="true" DisableSpecificDiagnostics="8290" WarnUnusedVariables="true" BuildDependencies="true" EmitBuildDependencies="true" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDebug"/>
-				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="$(SolutionDir)..\SourceCode\HDF5Lib\$(Platform)\$(Configuration)" GenerateDebugInformation="true" SubSystem="subSystemConsole" StackReserveSize="256000000" AdditionalDependencies="libhdf5_fortran_D.lib libhdf5_D.lib libhdf5_f90cstub_D.lib libszip_D.lib libzlib_D.lib"/>
+				<Tool Name="VFFortranCompilerTool" AdditionalOptions="/fp:consistent" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" Preprocess="preprocessYes" AdditionalIncludeDirectories="$(SolutionDir)..\SourceCode\HDF5Lib\$(Platform)\$(Configuration);$(SolutionDir)..\SourceCode\HECLib\$(Platform)\$(Configuration)" F2003Semantics="true" DisableSpecificDiagnostics="8290" WarnUnusedVariables="true" BuildDependencies="true" EmitBuildDependencies="true" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDebug"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="$(SolutionDir)..\SourceCode\HDF5Lib\$(Platform)\$(Configuration);$(SolutionDir)..\SourceCode\HECLib\$(Platform)\$(Configuration)" GenerateDebugInformation="true" SubSystem="subSystemConsole" StackReserveSize="256000000" AdditionalDependencies="libhdf5_fortran_D.lib libhdf5_D.lib libhdf5_f90cstub_D.lib libszip_D.lib libzlib_D.lib heclib_ivf_debug_x64.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -35,8 +35,8 @@
 				<Tool Name="VFPostBuildEventTool" CommandLine="copy /Y &quot;$(OutDir)\$(TargetName)$(TargetExt)&quot; &quot;$(ProjectDir)..\Bin&quot;"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Release|x64" IntermediateDirectory="$(ProjectDir)$(PlatformName)\$(ConfigurationName)" TargetName="PreProcessor2015_x64">
-				<Tool Name="VFFortranCompilerTool" AdditionalOptions="/fp:consistent" SuppressStartupBanner="true" InterproceduralOptimizations="ipoMultiFile" Preprocess="preprocessYes" AdditionalIncludeDirectories="$(SolutionDir)..\SourceCode\HDF5Lib\$(Platform)\$(Configuration)" F2003Semantics="true" DisableSpecificDiagnostics="8290,10212"/>
-				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="$(SolutionDir)..\SourceCode\HDF5Lib\$(Platform)\$(Configuration)" SubSystem="subSystemConsole" StackReserveSize="256000000" AdditionalDependencies="libhdf5_fortran.lib libhdf5.lib libhdf5_f90cstub.lib libszip.lib libzlib.lib"/>
+				<Tool Name="VFFortranCompilerTool" AdditionalOptions="/fp:consistent" SuppressStartupBanner="true" InterproceduralOptimizations="ipoMultiFile" Preprocess="preprocessYes" AdditionalIncludeDirectories="$(SolutionDir)..\SourceCode\HDF5Lib\$(Platform)\$(Configuration);$(SolutionDir)..\SourceCode\HECLib\$(Platform)\$(Configuration)" F2003Semantics="true" DisableSpecificDiagnostics="8290,10212"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="$(SolutionDir)..\SourceCode\HDF5Lib\$(Platform)\$(Configuration);$(SolutionDir)..\SourceCode\HECLib\$(Platform)\$(Configuration)" SubSystem="subSystemConsole" StackReserveSize="256000000" AdditionalDependencies="libhdf5_fortran.lib libhdf5.lib libhdf5_f90cstub.lib libszip.lib libzlib.lib heclib_ivf_release_x64.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -55,17 +55,18 @@
 		<Filter Name="IOInterface">
 		<File RelativePath="..\SourceCode\IWFM_Util\IOInterface_NoDSS\Class_AsciiFileType.f90"/>
 		<File RelativePath="..\SourceCode\IWFM_Util\IOInterface_NoDSS\Class_BaseFileType.f90"/>
+		<File RelativePath="..\SourceCode\IWFM_Util\IOInterface_NoDSS\Class_DSSFileType.f90"/>
 		<File RelativePath="..\SourceCode\IWFM_Util\IOInterface_NoDSS\Class_FortBinaryFileType.f90"/>
 		<File RelativePath="..\SourceCode\IWFM_Util\IOInterface_NoDSS\Class_HDF5FileType.f90"/>
-		<File RelativePath="..\SourceCode\IWFM_Util\IOInterface_NoDSS\IOInterface_NoDSS.f90"/></Filter>
+		<File RelativePath="..\SourceCode\IWFM_Util\IOInterface_NoDSS\IOInterface.f90"/></Filter>
 		<Filter Name="Utilities">
 		<File RelativePath="..\SourceCode\IWFM_Util\Utilities_NoDSS\Class_BinaryTree.f90"/>
 		<File RelativePath="..\SourceCode\IWFM_Util\Utilities_NoDSS\Class_LinkedListNode.f90"/>
 		<File RelativePath="..\SourceCode\IWFM_Util\Utilities_NoDSS\Class_Version.f90"/>
 		<File RelativePath="..\SourceCode\IWFM_Util\Utilities_NoDSS\GeneralUtilities.f90"/>
 		<File RelativePath="..\SourceCode\IWFM_Util\Utilities_NoDSS\GenericLinkedList.f90"/>
-		<File RelativePath="..\SourceCode\IWFM_Util\Utilities_NoDSS\IWFM_Util_NoDSS_VersionF.f90"/>
 		<File RelativePath="..\SourceCode\IWFM_Util\Utilities_NoDSS\IWFM_Util_Revision.fi"/>
+		<File RelativePath="..\SourceCode\IWFM_Util\Utilities_NoDSS\IWFM_Util_VersionF.f90"/>
 		<File RelativePath="..\SourceCode\IWFM_Util\Utilities_NoDSS\MessageLogger.f90"/>
 		<File RelativePath="..\SourceCode\IWFM_Util\Utilities_NoDSS\ProgramTimer.f90"/>
 		<File RelativePath="..\SourceCode\IWFM_Util\Utilities_NoDSS\TimeSeriesUtilities.f90"/></Filter></Filter>
