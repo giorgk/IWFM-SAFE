@@ -81,6 +81,7 @@ MODULE Class_StrmGWConnector_v421
       PROCEDURE,PASS :: CompileConductance                       => StrmGWConnector_v421_CompileConductance      !Overrides the original method from parent class
       PROCEDURE,PASS :: Simulate                                 => StrmGWConnector_v421_Simulate                !Overrides the original method from parent class
       PROCEDURE,PASS :: Set_KH_KV                                => StrmGWConnector_v421_Set_KH_KV
+      PROCEDURE,PASS :: Set_Element_Q                            => StrmGWConnector_v421_Set_Element_Q
   END TYPE StrmGWConnector_v421_Type
     
   
@@ -616,6 +617,13 @@ CONTAINS
     INTEGER,INTENT(OUT)                 :: iStat
     iStat = 0;
   END SUBROUTINE StrmGWConnector_v421_Set_KH_KV
+
+  SUBROUTINE StrmGWConnector_v421_Set_Element_Q(Connector, Q, iStat)
+    CLASS(StrmGWConnector_v421_Type)    :: Connector
+    REAL(8),INTENT(IN)                  :: Q(:)
+    INTEGER,INTENT(OUT)                 :: iStat
+    iStat = 0;
+  END SUBROUTINE StrmGWConnector_v421_Set_Element_Q
   
   
   

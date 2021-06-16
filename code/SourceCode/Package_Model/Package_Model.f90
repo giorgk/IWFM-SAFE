@@ -5023,6 +5023,9 @@ CONTAINS
     LOGICAL :: lEndIteration
     REAL(8) :: AgDemand(Model%RootZone%GetNDemandLocations()),UrbDemand(Model%RootZone%GetNDemandLocations())
     
+    REAL(8),ALLOCATABLE :: NodeStorageChange(:), ElementStorageChange(:), NodeStorativity(:), SafeQ(:)
+    
+    
     !Initialize
     iStat      = 0
     NStrmNodes = Model%AppStream%GetNStrmNodes()
@@ -5054,6 +5057,8 @@ CONTAINS
         CALL Model%ElemPumpDestinationConnector%InitSupplyToAgUrbanFracs(AgDemand,Model%DestAgAreas,UrbDemand,Model%DestUrbAreas)
     END IF
     
+    ALLOCATE (NodeStorageChange(Model%AppGrid%NNodes), NodeStorativity(Model%AppGrid%NNodes), ElementStorageChange(Model%AppGrid%NElements), SafeQ(Model%AppGrid%NElements))
+    
     !Start the iteration of supply adjustment
     !----------------------------------------
     Supply_Adjustment_Loop:  &
@@ -5084,6 +5089,12 @@ CONTAINS
 ! ***** SIMULATE STREAMS AND UPDATE MATRIX COEFF AND RHS ACCORDINGLY
             CALL Model%RootZone%GetFlowsToStreams(Model%AppGrid , Model%QROFF , Model%QRTRN , Model%QRVET)
             CALL Model%AppGW%GetTileDrainFlowsToStreams(Model%QDRAIN)
+            
+            !CALL Model%AppGW%CalculateSafeQ(Model%AppGrid%NElements,SafeQ)
+            !CALL Model%AppGW%GetChangeInStorageAtLayer(1, Model%AppGrid%NNodes, Model%Stratigraphy, NodeStorageChange, NodeStorativity)
+            !CALL Model%AppGrid%NodeData_To_ElemData(NodeStorageChange, ElementStorageChange)
+            !CALL Model%StrmGWConnector%Set_Element_Q(ElementStorageChange, iStat)
+            
             CALL Model%AppStream%Simulate(Model%GWHeads,Model%QROFF,Model%QRTRN,Model%QTRIB,Model%QDRAIN,Model%QRVET,Model%QRVETFRAC,Model%StrmGWConnector,Model%StrmLakeConnector,Model%Matrix)
                      
             IF (Model%lRootZone_Defined) THEN      
@@ -5130,6 +5141,11 @@ CONTAINS
                                       Model%Stratigraphy                        , &
                                       Model%NetElemSource                       , &
                                       Model%Matrix                              )
+
+            CALL Model%AppGW%CalculateSafeQ(Model%AppGrid%NElements,SafeQ)
+            !CALL Model%AppGW%GetChangeInStorageAtLayer(1, Model%AppGrid%NNodes, Model%Stratigraphy, NodeStorageChange, NodeStorativity)
+            !CALL Model%AppGrid%NodeData_To_ElemData(NodeStorageChange, ElementStorageChange)
+            CALL Model%StrmGWConnector%Set_Element_Q(SafeQ, iStat)
                      
 ! ***** SOLVE THE SET OF EQUATION
             CALL EchoProgress('Solving set of equations')

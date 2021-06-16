@@ -96,6 +96,7 @@ MODULE Class_StrmGWConnector
       PROCEDURE,PASS :: Simulate
       PROCEDURE,PASS :: RegisterWithMatrix
       PROCEDURE,PASS :: Set_KH_KV
+      PROCEDURE,PASS :: Set_Element_Q
       GENERIC        :: New      => ReadPreprocessedData              , &
                                     AddGWNodes 
   END TYPE StrmGWConnectorType
@@ -843,6 +844,18 @@ CONTAINS
 
     IF (Connector%lDefined) THEN
       CALL Connector%Me%Set_KH_KV(Kh, Kv, iStat)
+    END IF
+
+  END SUBROUTINE
+  
+  
+  SUBROUTINE Set_Element_Q(Connector, Q, iStat)
+    CLASS(StrmGWConnectorType)  :: Connector
+    REAL(8),INTENT(IN)          :: Q(:)
+    INTEGER,INTENT(OUT)         :: iStat
+
+    IF (Connector%lDefined) THEN
+      CALL Connector%Me%Set_Element_Q(Q,iStat)
     END IF
 
   END SUBROUTINE

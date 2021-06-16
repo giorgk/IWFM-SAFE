@@ -85,6 +85,7 @@ MODULE Class_BaseStrmGWConnector
     PROCEDURE(Abstract_StrmGWConnector_Simulate),PASS,DEFERRED           :: Simulate 
     PROCEDURE(Abstract_StrmGWConnector_CompileConductance),PASS,DEFERRED :: CompileConductance
     PROCEDURE(Abstract_StrmGWConnector_Set_KH_KV),PASS,DEFERRED          :: Set_KH_KV
+    PROCEDURE(Abstract_StrmGWConnector_Set_Element_Q),PASS,DEFERRED          :: Set_Element_Q
     PROCEDURE,PASS                                                       :: BaseStrmGWConnector_AddGWNodes
     PROCEDURE,PASS                                                       :: BaseStrmGWConnector_ReadPreprocessedData
     PROCEDURE,PASS                                                       :: Kill                    => BaseStrmGWConnector_Kill
@@ -142,6 +143,13 @@ MODULE Class_BaseStrmGWConnector
         REAL(8),INTENT(IN)                :: Kh(:), Kv(:)
         INTEGER,INTENT(OUT)               :: iStat
       END SUBROUTINE Abstract_StrmGWConnector_Set_KH_KV
+
+      SUBROUTINE Abstract_StrmGWConnector_Set_Element_Q(Connector, Q, iStat)
+        IMPORT                            :: BaseStrmGWConnectorType
+        CLASS(BaseStrmGWConnectorType)    :: Connector
+        REAL(8),INTENT(IN)                :: Q(:)
+        INTEGER,INTENT(OUT)               :: iStat
+      END SUBROUTINE Abstract_StrmGWConnector_Set_Element_Q
       
   END INTERFACE
 
@@ -648,5 +656,6 @@ CONTAINS
     END DO
     
   END SUBROUTINE BaseStrmGWConnector_RegisterWithMatrix
+
   
 END MODULE

@@ -112,6 +112,7 @@ MODULE Class_StrmGWConnector_v42
       PROCEDURE,PASS :: CompileConductance                       => StrmGWConnector_v42_CompileConductance
       PROCEDURE,PASS :: ConvertTimeUnit                          => StrmGWConnector_v42_ConvertTimeUnit               !Overrides the original method from base class
       PROCEDURE,PASS :: Set_KH_KV                                => StrmGWConnector_v42_Set_KH_KV
+      PROCEDURE,PASS :: Set_Element_Q                            => StrmGWConnector_v42_Set_Element_Q
   END TYPE StrmGWConnector_v42_Type
     
   
@@ -988,5 +989,12 @@ CONTAINS
     INTEGER,INTENT(OUT)                 :: iStat
     iStat = 0;
   END SUBROUTINE StrmGWConnector_v42_Set_KH_KV
+
+  SUBROUTINE StrmGWConnector_v42_Set_Element_Q(Connector, Q, iStat)
+    CLASS(StrmGWConnector_v42_Type)    :: Connector
+    REAL(8),INTENT(IN)                  :: Q(:)
+    INTEGER,INTENT(OUT)                 :: iStat
+    iStat = 0;
+  END SUBROUTINE StrmGWConnector_v42_Set_Element_Q
   
 END MODULE

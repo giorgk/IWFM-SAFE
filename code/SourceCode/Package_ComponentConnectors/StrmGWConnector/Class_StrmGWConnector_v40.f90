@@ -70,6 +70,7 @@ MODULE Class_StrmGWConnector_v40
       PROCEDURE,PASS :: Simulate           => StrmGWConnector_v40_Simulate
       PROCEDURE,PASS :: CompileConductance => StrmGWConnector_v40_CompileConductance
       PROCEDURE,PASS :: Set_KH_KV          => StrmGWConnector_v40_Set_KH_KV
+      PROCEDURE,PASS :: Set_Element_Q      => StrmGWConnector_v40_Set_Element_Q
   END TYPE StrmGWConnector_v40_Type
     
   
@@ -298,5 +299,12 @@ CONTAINS
     INTEGER,INTENT(OUT)                 :: iStat
     iStat = 0;
   END SUBROUTINE StrmGWConnector_v40_Set_KH_KV
+
+  SUBROUTINE StrmGWConnector_v40_Set_Element_Q(Connector, Q, iStat)
+    CLASS(StrmGWConnector_v40_Type)    :: Connector
+    REAL(8),INTENT(IN)                  :: Q(:)
+    INTEGER,INTENT(OUT)                 :: iStat
+    iStat = 0;
+  END SUBROUTINE StrmGWConnector_v40_Set_Element_Q
     
 END MODULE

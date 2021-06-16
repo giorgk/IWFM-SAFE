@@ -269,6 +269,7 @@ MODULE Class_AppGW
       PROCEDURE,PASS   :: TransferOutputToHDF
       PROCEDURE,PASS   :: RemoveBC
       PROCEDURE,PASS   :: ReadKhKv
+      PROCEDURE,PASS   :: CalculateSafeQ
       GENERIC          :: GetModelData_AtLocation           => GetModelData_AtLocation_FromFullModel    , &
                                                                GetModelData_AtLocation_FromInquiryModel
   END TYPE AppGWType
@@ -4212,14 +4213,31 @@ CONTAINS
 
 
 
-  SUBROUTINE ReadKhKv(AppGW, inode, ilayer, KH, KV)
-    CLASS(AppGWType)    :: AppGW
-    INTEGER,INTENT(IN)  :: inode,ilayer
-    REAL(8), INTENT(OUT) :: KH, KV
-    KH = AppGW%Nodes(inode,ilayer)%Kh
-    KV = AppGW%Nodes(inode,ilayer)%Kv
-
-  END SUBROUTINE  
+    SUBROUTINE ReadKhKv(AppGW, inode, ilayer, KH, KV)
+        CLASS(AppGWType)    :: AppGW
+        INTEGER,INTENT(IN)  :: inode,ilayer
+        REAL(8), INTENT(OUT) :: KH, KV
+        KH = AppGW%Nodes(inode,ilayer)%Kh
+        KV = AppGW%Nodes(inode,ilayer)%Kv
+  
+    END SUBROUTINE ReadKhKv
+  
+    
+    
+    SUBROUTINE CalculateSafeQ(AppGW, NElements, Qelem)
+        CLASS(AppGWType)    :: AppGW
+        INTEGER,INTENT(IN)      :: NElements
+        REAL(8), INTENT(OUT) :: Qelem(:)
+        INTEGER             :: ii
+        
+        Qelem = AppGW%AppPumping%GetElementPumpActual(NElements)
+        !DO ii = 1,NElements
+        !    Qelem(ii) = 0.0
+        !END DO
+        
+    
+    END
+    
   
   
 END MODULE
