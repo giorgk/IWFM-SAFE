@@ -55,7 +55,8 @@ MODULE Class_BaseStrmGWConnector
   PUBLIC :: BaseStrmGWConnectorType  , &
             BaseStrmGWConnector_Kill , &
             iDisconnectAtTopOfBed    , &
-            iDisconnectAtBottomOfBed
+            iDisconnectAtBottomOfBed , &
+            iSafeTMP
   
   
   ! -------------------------------------------------------------
@@ -63,6 +64,7 @@ MODULE Class_BaseStrmGWConnector
   ! -------------------------------------------------------------
   INTEGER,PARAMETER :: iDisconnectAtTopOfBed    = 1 , &
                        iDisconnectAtBottomOfBed = 2 , &
+                       iSafeTMP = 0, &
                        iDisconnectTypeArray(2)  = [iDisconnectAtTopOfBed    , &
                                                    iDisconnectAtBottomOfBed ]
   
@@ -84,8 +86,10 @@ MODULE Class_BaseStrmGWConnector
   CONTAINS
     PROCEDURE(Abstract_StrmGWConnector_Simulate),PASS,DEFERRED           :: Simulate 
     PROCEDURE(Abstract_StrmGWConnector_CompileConductance),PASS,DEFERRED :: CompileConductance
-    PROCEDURE(Abstract_StrmGWConnector_Set_KH_KV),PASS,DEFERRED          :: Set_KH_KV
-    PROCEDURE(Abstract_StrmGWConnector_Set_Element_Q),PASS,DEFERRED          :: Set_Element_Q
+    PROCEDURE(Abstract_StrmGWConnector_Set_KH_KV_SY),PASS,DEFERRED       :: Set_KH_KV_SY
+    PROCEDURE(Abstract_StrmGWConnector_Set_Element_Q),PASS,DEFERRED      :: Set_Element_Q
+    PROCEDURE(Abstract_StrmGWConnector_Get_SAFE_FLAG),PASS,DEFERRED      :: Get_SAFE_FLAG
+    PROCEDURE(Abstract_StrmGWConnector_Set_SAFE_FLAG),PASS,DEFERRED      :: Set_SAFE_FLAG
     PROCEDURE,PASS                                                       :: BaseStrmGWConnector_AddGWNodes
     PROCEDURE,PASS                                                       :: BaseStrmGWConnector_ReadPreprocessedData
     PROCEDURE,PASS                                                       :: Kill                    => BaseStrmGWConnector_Kill
@@ -137,12 +141,12 @@ MODULE Class_BaseStrmGWConnector
         INTEGER,INTENT(OUT)               :: iStat
       END SUBROUTINE Abstract_StrmGWConnector_CompileConductance
 
-      SUBROUTINE Abstract_StrmGWConnector_Set_KH_KV(Connector, Kh, Kv, iStat)
+      SUBROUTINE Abstract_StrmGWConnector_Set_KH_KV_SY(Connector, Kh, Kv, Sy, iStat)
         IMPORT                            :: BaseStrmGWConnectorType
         CLASS(BaseStrmGWConnectorType)    :: Connector
-        REAL(8),INTENT(IN)                :: Kh(:), Kv(:)
+        REAL(8),INTENT(IN)                :: Kh(:), Kv(:), Sy(:)
         INTEGER,INTENT(OUT)               :: iStat
-      END SUBROUTINE Abstract_StrmGWConnector_Set_KH_KV
+      END SUBROUTINE Abstract_StrmGWConnector_Set_KH_KV_SY
 
       SUBROUTINE Abstract_StrmGWConnector_Set_Element_Q(Connector, Q, iStat)
         IMPORT                            :: BaseStrmGWConnectorType
@@ -150,6 +154,18 @@ MODULE Class_BaseStrmGWConnector
         REAL(8),INTENT(IN)                :: Q(:)
         INTEGER,INTENT(OUT)               :: iStat
       END SUBROUTINE Abstract_StrmGWConnector_Set_Element_Q
+
+      SUBROUTINE Abstract_StrmGWConnector_Get_SAFE_FLAG(Connector, iflag)
+        IMPORT                            :: BaseStrmGWConnectorType
+        CLASS(BaseStrmGWConnectorType)    :: Connector
+        INTEGER,INTENT(OUT)               :: iflag
+      END SUBROUTINE Abstract_StrmGWConnector_Get_SAFE_FLAG
+
+      SUBROUTINE Abstract_StrmGWConnector_Set_SAFE_FLAG(Connector, iflag)
+        IMPORT                            :: BaseStrmGWConnectorType
+        CLASS(BaseStrmGWConnectorType)    :: Connector
+        INTEGER,INTENT(IN)               :: iflag
+      END SUBROUTINE Abstract_StrmGWConnector_Set_SAFE_FLAG
       
   END INTERFACE
 

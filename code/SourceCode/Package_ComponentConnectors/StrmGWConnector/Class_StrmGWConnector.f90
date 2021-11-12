@@ -95,8 +95,10 @@ MODULE Class_StrmGWConnector
       PROCEDURE,PASS :: ComputeStrmGWFlow_AtMinHead
       PROCEDURE,PASS :: Simulate
       PROCEDURE,PASS :: RegisterWithMatrix
-      PROCEDURE,PASS :: Set_KH_KV
+      PROCEDURE,PASS :: Set_KH_KV_SY
       PROCEDURE,PASS :: Set_Element_Q
+      PROCEDURE,PASS :: Get_SAFE_FLAG
+      PROCEDURE,PASS :: Set_SAFE_FLAG
       GENERIC        :: New      => ReadPreprocessedData              , &
                                     AddGWNodes 
   END TYPE StrmGWConnectorType
@@ -837,16 +839,16 @@ CONTAINS
     
   END SUBROUTINE RegisterWithMatrix
 
-  SUBROUTINE Set_KH_KV(Connector, Kh, Kv, iStat)
+  SUBROUTINE Set_KH_KV_SY(Connector, Kh, Kv, Sy, iStat)
     CLASS(StrmGWConnectorType)  :: Connector
-    REAL(8),INTENT(IN)          :: Kh(:), Kv(:)
+    REAL(8),INTENT(IN)          :: Kh(:), Kv(:), Sy(:)
     INTEGER,INTENT(OUT)         :: iStat
 
     IF (Connector%lDefined) THEN
-      CALL Connector%Me%Set_KH_KV(Kh, Kv, iStat)
+      CALL Connector%Me%Set_KH_KV_SY(Kh, Kv, Sy, iStat)
     END IF
 
-  END SUBROUTINE
+  END SUBROUTINE Set_KH_KV_SY
   
   
   SUBROUTINE Set_Element_Q(Connector, Q, iStat)
@@ -858,7 +860,27 @@ CONTAINS
       CALL Connector%Me%Set_Element_Q(Q,iStat)
     END IF
 
-  END SUBROUTINE
+  END SUBROUTINE Set_Element_Q
+
+  SUBROUTINE Get_SAFE_FLAG(Connector, iflag)
+    CLASS(StrmGWConnectorType)  :: Connector
+    INTEGER,INTENT(OUT)         :: iflag
+
+    IF (Connector%lDefined) THEN
+      CALL Connector%Me%Get_SAFE_FLAG(iflag)
+    END IF
+
+  END SUBROUTINE Get_SAFE_FLAG
+
+  SUBROUTINE Set_SAFE_FLAG(Connector, iflag)
+    CLASS(StrmGWConnectorType)  :: Connector
+    INTEGER,INTENT(IN)         :: iflag
+
+    IF (Connector%lDefined) THEN
+      CALL Connector%Me%Set_SAFE_FLAG(iflag)
+    END IF
+
+  END SUBROUTINE Set_SAFE_FLAG
 
 
 END MODULE

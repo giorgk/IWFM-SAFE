@@ -70,8 +70,10 @@ MODULE Class_StrmGWConnector_v41
   CONTAINS
       PROCEDURE,PASS :: Simulate           => StrmGWConnector_v41_Simulate
       PROCEDURE,PASS :: CompileConductance => StrmGWConnector_v41_CompileConductance
-      PROCEDURE,PASS :: Set_KH_KV          => StrmGWConnector_v41_Set_KH_KV
+      PROCEDURE,PASS :: Set_KH_KV_SY          => StrmGWConnector_v41_Set_KH_KV_SY
       PROCEDURE,PASS :: Set_Element_Q      => StrmGWConnector_v41_Set_Element_Q
+      PROCEDURE,PASS :: Get_SAFE_FLAG      => StrmGWConnector_v41_Get_SAFE_FLAG
+      PROCEDURE,PASS :: Set_SAFE_FLAG      => StrmGWConnector_v41_Set_SAFE_FLAG
   END TYPE StrmGWConnector_v41_Type
   
   
@@ -300,12 +302,12 @@ CONTAINS
     
   END SUBROUTINE StrmGWConnector_v41_Simulate
 
-  SUBROUTINE StrmGWConnector_v41_Set_KH_KV(Connector, Kh, Kv, iStat)
+  SUBROUTINE StrmGWConnector_v41_Set_KH_KV_SY(Connector, Kh, Kv, Sy, iStat)
     CLASS(StrmGWConnector_v41_Type)    :: Connector
-    REAL(8),INTENT(IN)                  :: Kh(:), Kv(:)
+    REAL(8),INTENT(IN)                  :: Kh(:), Kv(:), Sy(:)
     INTEGER,INTENT(OUT)                 :: iStat
     iStat = 0;
-  END SUBROUTINE StrmGWConnector_v41_Set_KH_KV
+  END SUBROUTINE StrmGWConnector_v41_Set_KH_KV_SY
 
   SUBROUTINE StrmGWConnector_v41_Set_Element_Q(Connector, Q, iStat)
     CLASS(StrmGWConnector_v41_Type)    :: Connector
@@ -313,5 +315,15 @@ CONTAINS
     INTEGER,INTENT(OUT)                 :: iStat
     iStat = 0;
   END SUBROUTINE StrmGWConnector_v41_Set_Element_Q
+
+  SUBROUTINE StrmGWConnector_v41_Get_SAFE_FLAG(Connector, iflag)
+    CLASS(StrmGWConnector_v41_Type)    :: Connector
+    INTEGER,INTENT(OUT)                 :: iflag
+  END SUBROUTINE StrmGWConnector_v41_Get_SAFE_FLAG
+
+  SUBROUTINE StrmGWConnector_v41_Set_SAFE_FLAG(Connector, iflag)
+    CLASS(StrmGWConnector_v41_Type)    :: Connector
+    INTEGER,INTENT(IN)                 :: iflag
+  END SUBROUTINE StrmGWConnector_v41_Set_SAFE_FLAG
    
 END MODULE

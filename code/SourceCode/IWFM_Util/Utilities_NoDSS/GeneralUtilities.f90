@@ -169,7 +169,9 @@ MODULE GeneralUtilities
             GetTime                       , &
             Tolerance                     , &
             ConvertID_To_Index            , &
-            FEXP
+            FEXP                          , &
+            CalculateTriangleArea         , &
+            LineLineIntersection  
           
           
           
@@ -1948,7 +1950,21 @@ CONTAINS
     END IF
     
   END FUNCTION FEXP
-  
+
+  PURE FUNCTION CalculateTriangleArea(ax, ay, bx, by, cx, cy) RESULT(area)
+    REAL(8),INTENT(IN) :: ax, ay, bx, by, cx, cy
+    REAL(8)            :: area
+    area = ABS((ax*(by - cy) + bx*(cy - ay) + cx*(ay - by))/2)
+  END FUNCTION CalculateTriangleArea  
+
+  SUBROUTINE LineLineIntersection(x1, y1, x2, y2, x3, y3, x4, y4, px, py)
+    REAL(8),INTENT(IN) :: x1, y1, x2, y2, x3, y3, x4, y4
+    REAL(8),INTENT(OUT) :: px, py
+    REAL(8) :: D
+    D = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
+    px = ((x1*y2 - y1*x2)*(x3 - x4) - (x1 - x2)*(x3*y4 - y3*x4))/D
+    py = ((x1*y2 - y1*x2)*(y3 - y4) - (y1 - y2)*(x3*y4 - y3*x4))/D
+  END SUBROUTINE LineLineIntersection
   
   ! -------------------------------------------------------------
   ! --- CONVERT FEATURE IDs TO FEATURE INDICES

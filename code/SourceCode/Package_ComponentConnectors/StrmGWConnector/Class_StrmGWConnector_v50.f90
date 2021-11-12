@@ -79,8 +79,10 @@ MODULE Class_StrmGWConnector_v50
       PROCEDURE,PASS :: ComputeStrmGWFlow_AtMinHead 
       PROCEDURE,PASS :: Simulate                    => StrmGWConnector_v50_Simulate
       PROCEDURE,PASS :: CompileConductance          => StrmGWConnector_v50_CompileConductance
-      PROCEDURE,PASS :: Set_KH_KV                   => StrmGWConnector_v50_Set_KH_KV
+      PROCEDURE,PASS :: Set_KH_KV_SY                => StrmGWConnector_v50_Set_KH_KV_SY
       PROCEDURE,PASS :: Set_Element_Q               => StrmGWConnector_v50_Set_Element_Q
+      PROCEDURE,PASS :: Get_SAFE_FLAG               => StrmGWConnector_v50_Get_SAFE_FLAG
+      PROCEDURE,PASS :: Set_SAFE_FLAG               => StrmGWConnector_v50_Set_SAFE_FLAG
   END TYPE StrmGWConnector_v50_Type
   
   
@@ -371,12 +373,12 @@ CONTAINS
     
   END SUBROUTINE ComputeStrmGWFlow_AtMinHead
 
-  SUBROUTINE StrmGWConnector_v50_Set_KH_KV(Connector, Kh, Kv, iStat)
+  SUBROUTINE StrmGWConnector_v50_Set_KH_KV_SY(Connector, Kh, Kv, Sy, iStat)
     CLASS(StrmGWConnector_v50_Type)    :: Connector
-    REAL(8),INTENT(IN)                  :: Kh(:), Kv(:)
+    REAL(8),INTENT(IN)                  :: Kh(:), Kv(:), Sy(:)
     INTEGER,INTENT(OUT)                 :: iStat
     iStat = 0;
-  END SUBROUTINE StrmGWConnector_v50_Set_KH_KV
+  END SUBROUTINE StrmGWConnector_v50_Set_KH_KV_SY
 
   SUBROUTINE StrmGWConnector_v50_Set_Element_Q(Connector, Q, iStat)
     CLASS(StrmGWConnector_v50_Type)    :: Connector
@@ -384,5 +386,15 @@ CONTAINS
     INTEGER,INTENT(OUT)                 :: iStat
     iStat = 0;
   END SUBROUTINE StrmGWConnector_v50_Set_Element_Q
+
+  SUBROUTINE StrmGWConnector_v50_Get_SAFE_FLAG(Connector, iflag)
+    CLASS(StrmGWConnector_v50_Type)    :: Connector
+    INTEGER,INTENT(OUT)                 :: iflag
+  END SUBROUTINE StrmGWConnector_v50_Get_SAFE_FLAG
+
+  SUBROUTINE StrmGWConnector_v50_Set_SAFE_FLAG(Connector, iflag)
+    CLASS(StrmGWConnector_v50_Type)    :: Connector
+    INTEGER,INTENT(IN)                 :: iflag
+  END SUBROUTINE StrmGWConnector_v50_Set_SAFE_FLAG
 
 END MODULE

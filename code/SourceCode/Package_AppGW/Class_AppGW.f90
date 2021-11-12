@@ -4213,29 +4213,87 @@ CONTAINS
 
 
 
-    SUBROUTINE ReadKhKv(AppGW, inode, ilayer, KH, KV)
+    SUBROUTINE ReadKhKv(AppGW, AppGrid, inode, ilayer, KH, KV, SY)
         CLASS(AppGWType)    :: AppGW
+        TYPE(AppGridType),INTENT(IN)      :: AppGrid
         INTEGER,INTENT(IN)  :: inode,ilayer
-        REAL(8), INTENT(OUT) :: KH, KV
+        REAL(8), INTENT(OUT) :: KH, KV, SY
         KH = AppGW%Nodes(inode,ilayer)%Kh
         KV = AppGW%Nodes(inode,ilayer)%Kv
+        SY = AppGW%Nodes(inode,ilayer)%Sy / AppGrid%AppNode(inode)%Area
   
     END SUBROUTINE ReadKhKv
   
     
     
-    SUBROUTINE CalculateSafeQ(AppGW, NElements, Qelem)
-        CLASS(AppGWType)    :: AppGW
-        INTEGER,INTENT(IN)      :: NElements
+    SUBROUTINE CalculateSafeQ(AppGW, AppGrid, Stratigraphy, NetElemSource, Qelem)
+        CLASS(AppGWType)                  :: AppGW
+        TYPE(AppGridType),INTENT(IN)      :: AppGrid
+        TYPE(StratigraphyType),INTENT(IN) :: Stratigraphy
+        REAL(8),INTENT(IN)                :: NetElemSource(:)
+        !INTEGER,INTENT(IN)      :: NElements
         REAL(8), INTENT(OUT) :: Qelem(:)
         INTEGER             :: ii
+        REAL(8)             :: rVertFlow_Upward(AppGrid%NElements),rVertFlow_Downward(AppGrid%NElements), &
+                               SubsND(AppGrid%NNodes), SubsEL(AppGrid%NElements), QtileND(AppGrid%NNodes), QtileEL(AppGrid%NElements), &
+                               QsIrigND(AppGrid%NNodes), QsIrigEL(AppGrid%NElements)
+        REAL(8),ALLOCATABLE             :: Pump(:), QtileD(:), QsIrig(:)
+        INTEGER,ALLOCATABLE    :: iGWNodes(:),iGWNodeLayers(:)
+
+        SubsND = 0
+        SubsEL = 0
+        QtileND = 0
+        QtileEL = 0
+        QsIrigND = 0
+        QsIrigEL = 0
+
+
+        ! Pumping 
+        Pump = AppGW%AppPumping%GetElementPumpActual(AppGrid%NElements)
         
-        Qelem = AppGW%AppPumping%GetElementPumpActual(NElements)
-        !DO ii = 1,NElements
-        !    Qelem(ii) = 0.0
+        ! Vertical FLows
+        !COMPUTE UPWARD AND DOWNWARD VERTICAL FLOW AT ALL ELEMENTS IN A LAYER BETWEEN THAT LAYER AND THE ACTIVE LAYER BELOW
+        CALL GetVerticalElementUpwardDownwardFlow_AtLayer(AppGW,1,AppGrid,Stratigraphy,rVertFlow_Upward,rVertFlow_Downward)
+        
+        ! Subsidence
+        CALL AppGW%AppSubsidence%GetSubsidenceAtLayer(1,SubsND)
+        CALL AppGrid%NodeData_To_ElemData(SubsND, SubsEL)
+        
+        ! TileDrains
+        CALL AppGW%AppTileDrain%GetGWNodesLayers(1, iGWNodes, iGWNodeLayers)
+        CALL AppGW%AppTileDrain%GetFlows(1, QtileD)
+        DO ii = 1,SIZE(iGWNodes)
+          IF (iGWNodeLayers(ii) .EQ. 1)THEN
+            QtileND(iGWNodes(ii)) = QtileD(ii)
+          END IF
+        END DO
+        CALL AppGrid%NodeData_To_ElemData(QtileND, QtileEL)
+
+
+        CALL AppGW%AppTileDrain%GetGWNodesLayers(2, iGWNodes, iGWNodeLayers)
+        CALL AppGW%AppTileDrain%GetFlows(2, QsIrig)
+        DO ii = 1,SIZE(iGWNodes)
+          IF (iGWNodeLayers(ii) .EQ. 1)THEN
+            QsIrigND(iGWNodes(ii)) = QsIrig(ii)
+          END IF
+        END DO
+        CALL AppGrid%NodeData_To_ElemData(QsIrigND, QsIrigEL)
+        
+        !Qelem = -NetElemSource + Pump - rVertFlow_Upward + rVertFlow_Downward + SubsEL + QtileEL + QsIrigEL
+        ! Pumping only
+        !Qelem = Pump  
+        
+        ! Groundwater recharge
+        !Qelem = -NetElemSource 
+
+        ! Groundwater recharge and Pumping
+        Qelem = -NetElemSource + Pump
+
+        !open(96, file = 'safe_Qterms.dat', status = 'UNKNOWN')
+        !DO ii = 1,SIZE(Qelem)
+        !  write(96,'(F20.5, F20.5, F20.5, F20.5, F20.5, F20.5, F20.5, F20.5)') Qelem(ii), NetElemSource(ii), Pump(ii), rVertFlow_Upward(ii), rVertFlow_Downward(ii), SubsEL(ii), QtileEL(ii), QsIrigEL(ii) 
         !END DO
-        
-    
+        !close(96)
     END
     
   

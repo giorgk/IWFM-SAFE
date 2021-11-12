@@ -5024,9 +5024,12 @@ CONTAINS
     REAL(8) :: AgDemand(Model%RootZone%GetNDemandLocations()),UrbDemand(Model%RootZone%GetNDemandLocations())
     
     REAL(8),ALLOCATABLE :: NodeStorageChange(:), ElementStorageChange(:), NodeStorativity(:), SafeQ(:)
+
+    INTEGER :: iUseSafe
     
     
     !Initialize
+    iUseSafe = 0
     iStat      = 0
     NStrmNodes = Model%AppStream%GetNStrmNodes()
     NLakes     = Model%AppLake%GetNLakes()
@@ -5063,6 +5066,9 @@ CONTAINS
     !----------------------------------------
     Supply_Adjustment_Loop:  &
     DO 
+        !iUseSafe = 0
+        !CALL Model%StrmGWConnector%Set_SAFE_FLAG(iUseSafe)
+
         !For supply adjustment option, restore the groundwater and stream heads to those at the beginning of the time step
         IF (Model%SupplyAdjust%IsAdjust()) THEN
             WRITE (MessageArray(1),'(A,10X,A,1X,A,I6,1X,A)') LineFeed,REPEAT('*',3),'SUPPLY ADJUSTMENT ITERATION:',Model%SupplyAdjust%GetAdjustIter(),REPEAT('*',3)
@@ -5142,7 +5148,7 @@ CONTAINS
                                       Model%NetElemSource                       , &
                                       Model%Matrix                              )
 
-            CALL Model%AppGW%CalculateSafeQ(Model%AppGrid%NElements,SafeQ)
+            CALL Model%AppGW%CalculateSafeQ(Model%AppGrid, Model%Stratigraphy, Model%NetElemSource, SafeQ)
             !CALL Model%AppGW%GetChangeInStorageAtLayer(1, Model%AppGrid%NNodes, Model%Stratigraphy, NodeStorageChange, NodeStorativity)
             !CALL Model%AppGrid%NodeData_To_ElemData(NodeStorageChange, ElementStorageChange)
             CALL Model%StrmGWConnector%Set_Element_Q(SafeQ, iStat)
@@ -5158,6 +5164,14 @@ CONTAINS
             
             CALL Convergence(ITERX,Model%Convergence,Model%AppGrid,Model%Stratigraphy,Model%TimeStep,Model%Matrix,Model%AppStream,Model%AppLake,Model%AppGW,lEndIteration,iStat)
             IF (iStat .EQ. -1) RETURN
+
+            !IF (lEndIteration .AND. iUseSafe == 0) THEN
+            !  iUseSafe = 1
+            !  CALL Model%StrmGWConnector%Set_SAFE_FLAG(iUseSafe)
+            !ELSE IF (lEndIteration .AND. iUseSafe == 1) THEN
+            !  EXIT
+            !END IF
+
             IF (lEndIteration) EXIT
         END DO Newton_Raphson_Loop
       
@@ -5604,7 +5618,8 @@ CONTAINS
     INTEGER,ALLOCATABLE :: GWNodes(:)
     REAL(8),ALLOCATABLE :: Kh(:)
     REAL(8),ALLOCATABLE :: Kv(:)
-    REAL(8)             :: rKH, rKV
+    REAL(8),ALLOCATABLE :: Sy(:)
+    REAL(8)             :: rKH, rKV, rSy
     INTEGER :: iVer, indxNode, istat, ilayer
     !CLASS(ModelType)    :: AppStream
     iVer = Model%AppStream%GetINTVersion(Model%AppStream)
@@ -5618,15 +5633,16 @@ CONTAINS
 
       CALL Model%StrmGWConnector%GetAllGWNodes(GWNodes)
       !write(*,*) 'NstreamNodes', SIZE(GWNodes)
-      ALLOCATE( Kh(SIZE(GWNodes)), Kv(SIZE(GWNodes)) )
+      ALLOCATE( Kh(SIZE(GWNodes)), Kv(SIZE(GWNodes)), Sy(SIZE(GWNodes)) )
       !write(*,*) 'Kh size', SIZE(Kh), 'Kv size', SIZE(Kh)
 
       
       DO indxNode=1,SIZE(GWNodes)
         ilayer = Model%StrmGWConnector%GetLayer(indxNode)
-        CALL Model%AppGW%ReadKhKv(GWNodes(indxNode), ilayer, rKH, rKV)
+        CALL Model%AppGW%ReadKhKv(Model%AppGrid,GWNodes(indxNode), ilayer, rKH, rKV, rSy)
         Kh(indxNode) = rKH
         Kv(indxNode) = rKV
+        Sy(indxNode) = rSy
         !write(*,*) 'Index', GWNodes(indxNode), 'Kh', rKH, 'Kv', rKV
       END DO
 
@@ -5634,7 +5650,7 @@ CONTAINS
       !  write(*,*)  'Kh', Kh(indxNode), 'Kv', Kv(indxNode)
       !END DO
 
-      CALL Model%StrmGWConnector%Set_KH_KV(Kh,Kv,istat)
+      CALL Model%StrmGWConnector%Set_KH_KV_SY(Kh, Kv, Sy, istat)
     END IF
 
   END SUBROUTINE SetConductivity2StreamNodes
