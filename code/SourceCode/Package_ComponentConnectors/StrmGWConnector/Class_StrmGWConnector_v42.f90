@@ -113,6 +113,9 @@ MODULE Class_StrmGWConnector_v42
       PROCEDURE,PASS :: ConvertTimeUnit                          => StrmGWConnector_v42_ConvertTimeUnit               !Overrides the original method from base class
       PROCEDURE,PASS :: Set_KH_KV_SY                             => StrmGWConnector_v42_Set_KH_KV_SY
       PROCEDURE,PASS :: Set_Element_Q                            => StrmGWConnector_v42_Set_Element_Q
+      PROCEDURE,PASS :: CalculateLeftRightHeads                  => StrmGWConnector_v42_CalculateLeftRightHeads
+      PROCEDURE,PASS :: Calc_Left_Right_Q                        => StrmGWConnector_v42_Calc_Left_Right_Q
+      PROCEDURE,PASS :: Calc_IncipDesat                          => StrmGWConnector_v42_Calc_IncipDesat
       PROCEDURE,PASS :: Get_SAFE_FLAG                            => StrmGWConnector_v42_Get_SAFE_FLAG
       PROCEDURE,PASS :: Set_SAFE_FLAG                            => StrmGWConnector_v42_Set_SAFE_FLAG
   END TYPE StrmGWConnector_v42_Type
@@ -989,15 +992,37 @@ CONTAINS
     CLASS(StrmGWConnector_v42_Type)    :: Connector
     REAL(8),INTENT(IN)                  :: Kh(:), Kv(:), Sy(:)
     INTEGER,INTENT(OUT)                 :: iStat
-    iStat = 0;
+    iStat = 0
   END SUBROUTINE StrmGWConnector_v42_Set_KH_KV_SY
 
   SUBROUTINE StrmGWConnector_v42_Set_Element_Q(Connector, Q, iStat)
     CLASS(StrmGWConnector_v42_Type)    :: Connector
     REAL(8),INTENT(IN)                  :: Q(:)
     INTEGER,INTENT(OUT)                 :: iStat
-    iStat = 0;
+    iStat = 0
   END SUBROUTINE StrmGWConnector_v42_Set_Element_Q
+
+  SUBROUTINE StrmGWConnector_v42_CalculateLeftRightHeads(Connector, GWHeads, iStat)
+    CLASS(StrmGWConnector_v42_Type)    :: Connector
+    REAL(8),INTENT(IN)                  :: GWHeads(:,:)
+    INTEGER,INTENT(OUT)                 :: iStat
+    iStat = 0
+  END SUBROUTINE StrmGWConnector_v42_CalculateLeftRightHeads
+
+  SUBROUTINE StrmGWConnector_v42_Calc_Left_Right_Q(Connector, iStat)
+    CLASS(StrmGWConnector_v42_Type)    :: Connector
+    INTEGER,INTENT(OUT)                 :: iStat
+    iStat = 0
+    !INTEGER,INTENT(IN)                  :: iNNodes
+    !REAL(8),INTENT(IN)                :: rGWHeads(:),rStrmHeads(:)
+    !CLASS(AbstractFunctionType),OPTIONAL,INTENT(IN) :: WetPerimeterFunction(:)
+  END SUBROUTINE StrmGWConnector_v42_Calc_Left_Right_Q
+
+  SUBROUTINE StrmGWConnector_v42_Calc_IncipDesat(Connector, iStat)
+    CLASS(StrmGWConnector_v42_Type)    :: Connector
+    INTEGER,INTENT(OUT)                 :: iStat
+    iStat = 0
+  END SUBROUTINE StrmGWConnector_v42_Calc_IncipDesat
 
   SUBROUTINE StrmGWConnector_v42_Get_SAFE_FLAG(Connector, iflag)
     CLASS(StrmGWConnector_v42_Type)    :: Connector

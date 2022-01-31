@@ -49,9 +49,9 @@ C
 C----------------------------------------------------------------------------------------
 C         VALUE                                      DESCRIPTION
 C----------------------------------------------------------------------------------------
-   Simulation\Groundwater\Ex3_BC.dat                       / BCFL  
+   Groundwater\Ex3_BC.dat                       / BCFL  
                / TDFL
-   Simulation\Groundwater\Ex3_pump_input.dat            / PUMPFL
+   Groundwater\Ex3_pump_input.dat            / PUMPFL
                / SUBSFL
                / OVRWRTF
    1           / FACTLTO
@@ -60,14 +60,14 @@ C-------------------------------------------------------------------------------
    cu-m        / UNITVLO
    1		      / FACTVRO
    cu=m/d      / UNITVRO
-   Results\Ex3_Vel_out.out                             / VELOUTF
-   Results\Ex3_Vertflow_out.out                            / VFLOWOU
-   Results\Ex3_GW_HeadAll.out                 / GWALLOU
+   ..\Results\Ex3_Vel_out.out                             / VELOUTF
+   ..\Results\Ex3_Vertflow_out.out                            / VFLOWOU
+   ..\Results\Ex3_GW_HeadAll.out                 / GWALLOU
                / HTPOUT
                / VTPOUT
-   Results\Ex3_GW_Budget.hdf                  / GWBUDFL
-   Results\Ex3_GW_ZBudget.hdf                 / ZBUDFL
-   Results\Ex3_GW_FinalCond.out               / FNGWFL
+   ..\Results\Ex3_GW_Budget.hdf                  / GWBUDFL
+   ..\Results\Ex3_GW_ZBudget.hdf                 / ZBUDFL
+   ..\Results\Ex3_GW_FinalCond.out               / FNGWFL
 C*******************************************************************************
 C                             Debugging
 C

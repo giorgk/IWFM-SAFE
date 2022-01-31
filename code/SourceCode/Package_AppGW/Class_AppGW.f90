@@ -4253,33 +4253,34 @@ CONTAINS
         
         ! Vertical FLows
         !COMPUTE UPWARD AND DOWNWARD VERTICAL FLOW AT ALL ELEMENTS IN A LAYER BETWEEN THAT LAYER AND THE ACTIVE LAYER BELOW
-        CALL GetVerticalElementUpwardDownwardFlow_AtLayer(AppGW,1,AppGrid,Stratigraphy,rVertFlow_Upward,rVertFlow_Downward)
+        !!CALL GetVerticalElementUpwardDownwardFlow_AtLayer(AppGW,1,AppGrid,Stratigraphy,rVertFlow_Upward,rVertFlow_Downward)
         
         ! Subsidence
-        CALL AppGW%AppSubsidence%GetSubsidenceAtLayer(1,SubsND)
-        CALL AppGrid%NodeData_To_ElemData(SubsND, SubsEL)
+        !!CALL AppGW%AppSubsidence%GetSubsidenceAtLayer(1,SubsND)
+        !!CALL AppGrid%NodeData_To_ElemData(SubsND, SubsEL)
         
         ! TileDrains
-        CALL AppGW%AppTileDrain%GetGWNodesLayers(1, iGWNodes, iGWNodeLayers)
-        CALL AppGW%AppTileDrain%GetFlows(1, QtileD)
-        DO ii = 1,SIZE(iGWNodes)
-          IF (iGWNodeLayers(ii) .EQ. 1)THEN
-            QtileND(iGWNodes(ii)) = QtileD(ii)
-          END IF
-        END DO
-        CALL AppGrid%NodeData_To_ElemData(QtileND, QtileEL)
+        !!CALL AppGW%AppTileDrain%GetGWNodesLayers(1, iGWNodes, iGWNodeLayers)
+        !!CALL AppGW%AppTileDrain%GetFlows(1, QtileD)
+        !!DO ii = 1,SIZE(iGWNodes)
+        !!  IF (iGWNodeLayers(ii) .EQ. 1)THEN
+        !!    QtileND(iGWNodes(ii)) = QtileD(ii)
+        !!  END IF
+        !!END DO
+        !!CALL AppGrid%NodeData_To_ElemData(QtileND, QtileEL)
 
-
-        CALL AppGW%AppTileDrain%GetGWNodesLayers(2, iGWNodes, iGWNodeLayers)
-        CALL AppGW%AppTileDrain%GetFlows(2, QsIrig)
-        DO ii = 1,SIZE(iGWNodes)
-          IF (iGWNodeLayers(ii) .EQ. 1)THEN
-            QsIrigND(iGWNodes(ii)) = QsIrig(ii)
-          END IF
-        END DO
-        CALL AppGrid%NodeData_To_ElemData(QsIrigND, QsIrigEL)
+        
+        !!CALL AppGW%AppTileDrain%GetGWNodesLayers(2, iGWNodes, iGWNodeLayers)
+        !!CALL AppGW%AppTileDrain%GetFlows(2, QsIrig)
+        !!DO ii = 1,SIZE(iGWNodes)
+        !!  IF (iGWNodeLayers(ii) .EQ. 1)THEN
+        !!    QsIrigND(iGWNodes(ii)) = QsIrig(ii)
+        !!  END IF
+        !!END DO
+        !!CALL AppGrid%NodeData_To_ElemData(QsIrigND, QsIrigEL)
         
         !Qelem = -NetElemSource + Pump - rVertFlow_Upward + rVertFlow_Downward + SubsEL + QtileEL + QsIrigEL
+        
         ! Pumping only
         !Qelem = Pump  
         

@@ -5084,7 +5084,7 @@ CONTAINS
         DO
             CALL Model%Matrix%ResetToZero()
             ITERX = ITERX + 1
-            write(99,'(A5, I1, A120)') 'Iter ', ITERX, 'StrmH            GWH          DiscEl            Hs           HDiff         RHS           COEFF1         COEFF2'
+            !write(99,'(A5, I1, A120)') 'Iter ', ITERX, 'StrmH            GWH          DiscEl            Hs           HDiff         RHS           COEFF1         COEFF2'
       
 ! ***** GET GW HEAD VALUES TO BE USED IN DIFFERENT COMPONENTS
             CALL Model%AppGW%GetHeads(lPrevious=.FALSE. , Heads=Model%GWHeads)
@@ -5100,7 +5100,7 @@ CONTAINS
             !CALL Model%AppGW%GetChangeInStorageAtLayer(1, Model%AppGrid%NNodes, Model%Stratigraphy, NodeStorageChange, NodeStorativity)
             !CALL Model%AppGrid%NodeData_To_ElemData(NodeStorageChange, ElementStorageChange)
             !CALL Model%StrmGWConnector%Set_Element_Q(ElementStorageChange, iStat)
-            
+            !CALL Model%StrmGWConnector%CalculateLeftRightHeads(Model%GWHeads, iStat)
             CALL Model%AppStream%Simulate(Model%GWHeads,Model%QROFF,Model%QRTRN,Model%QTRIB,Model%QDRAIN,Model%QRVET,Model%QRVETFRAC,Model%StrmGWConnector,Model%StrmLakeConnector,Model%Matrix)
                      
             IF (Model%lRootZone_Defined) THEN      
@@ -5148,10 +5148,7 @@ CONTAINS
                                       Model%NetElemSource                       , &
                                       Model%Matrix                              )
 
-            CALL Model%AppGW%CalculateSafeQ(Model%AppGrid, Model%Stratigraphy, Model%NetElemSource, SafeQ)
-            !CALL Model%AppGW%GetChangeInStorageAtLayer(1, Model%AppGrid%NNodes, Model%Stratigraphy, NodeStorageChange, NodeStorativity)
-            !CALL Model%AppGrid%NodeData_To_ElemData(NodeStorageChange, ElementStorageChange)
-            CALL Model%StrmGWConnector%Set_Element_Q(SafeQ, iStat)
+            
                      
 ! ***** SOLVE THE SET OF EQUATION
             CALL EchoProgress('Solving set of equations')
@@ -5160,9 +5157,10 @@ CONTAINS
 
 ! ***** CHECK CONVERGENCE OF ITERATIVE SOLUTION METHODS
             CALL EchoProgress('Checking convergence')
-            write(*,*) 'Iteration', ITERX
+            !write(*,*) 'Iteration', ITERX
             
             CALL Convergence(ITERX,Model%Convergence,Model%AppGrid,Model%Stratigraphy,Model%TimeStep,Model%Matrix,Model%AppStream,Model%AppLake,Model%AppGW,lEndIteration,iStat)
+            write(94,'(I10, F20.5)') ITERX,  Model%Convergence%DIFF_L2_OLD
             IF (iStat .EQ. -1) RETURN
 
             !IF (lEndIteration .AND. iUseSafe == 0) THEN
@@ -5219,6 +5217,14 @@ CONTAINS
 ! ***** between models.    
 ! *************************************************************************
     CALL Model%SupplyAdjust%ResetState()
+
+    CALL Model%AppGW%CalculateSafeQ(Model%AppGrid, Model%Stratigraphy, Model%NetElemSource, SafeQ)
+    !CALL Model%AppGW%GetChangeInStorageAtLayer(1, Model%AppGrid%NNodes, Model%Stratigraphy, NodeStorageChange, NodeStorativity)
+    !CALL Model%AppGrid%NodeData_To_ElemData(NodeStorageChange, ElementStorageChange)
+    CALL Model%StrmGWConnector%Set_Element_Q(SafeQ, iStat)
+    CALL Model%StrmGWConnector%CalculateLeftRightHeads(Model%GWHeads, iStat)
+    CALL Model%StrmGWConnector%Calc_Left_Right_Q(iStat)
+    CALL Model%StrmGWConnector%Calc_IncipDesat(iStat)
     
   END SUBROUTINE SimulateOneTimeStep
     

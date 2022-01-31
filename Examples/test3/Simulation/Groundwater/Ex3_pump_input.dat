@@ -42,6 +42,6 @@ C-------------------------------------------------------------------------------
 C     VALUE                         DESCRIPTION
 C-------------------------------------------------------------------------------
                                     / WELLFL
-    Simulation\Groundwater\Ex3_elem_pump.dat                / ELEMPUMPFL
-    Simulation\Groundwater\Ex3_pump_ts.dat                / PUMPFL
-    Results\ElemWellPumping.out  / PUMPOUTFL
+    Groundwater\Ex3_elem_pump.dat                / ELEMPUMPFL
+    Groundwater\Ex3_pump_ts.dat                / PUMPFL
+    ..\Results\ElemWellPumping.out  / PUMPOUTFL

@@ -19,11 +19,11 @@ C                 * Leave blank if this output is not required
 C------------------------------------------------------------------------------
 C   VALUE					/ DESCRIPTION
 C------------------------------------------------------------------------------
-	Simulation\Streams\Ex3_Stream_Inflow.dat		/ INFLOWFL                       
+	Streams\Ex3_Stream_Inflow.dat		/ INFLOWFL                       
 		/ DIVSPECFL 
 		/ BYPSPECFL
 		/ DIVFL                        
-	Results\Ex3_Stream_Budget.hdf	 	/ STRMRCHBUDFL            
+	..\Results\Ex3_Stream_Budget.hdf	 	/ STRMRCHBUDFL            
 		/ DIVDTLBUDFL
 C*******************************************************************************
 C                       Stream Flow Hydrograph Output Data
@@ -51,7 +51,7 @@ C------------------------------------------------------------------------------
 		CB-MT/DAY                  			/ UNITVROU
 		100000                          			/ FACTLTOU
 		mm                      			/ UNITLTOU
-		Results\Ex3_Stream_hyd.dat									/ STHYDOUTFL
+		..\Results\Ex3_Stream_hyd.dat									/ STHYDOUTFL
 C-------------------------------------------------------------------------------
 C
 C   The following lists the stream node number for hydrograph to be printed
@@ -92,7 +92,7 @@ C------------------------------------------------------------------------------
 C   VALUE                         DESCRIPTION
 C------------------------------------------------------------------------------
 	17                         / NBUDR
-	Results\Ex3_Stream_Node_Budget.hdf                          / STNDBUDFL
+	..\Results\Ex3_Stream_Node_Budget.hdf                          / STNDBUDFL
 C-------------------------------------------------------------------------------
 C
 C   The following lists the stream nodes for budget output

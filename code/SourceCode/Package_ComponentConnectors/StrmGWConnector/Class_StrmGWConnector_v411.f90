@@ -62,7 +62,29 @@ MODULE Class_StrmGWConnector_v411
   ! -------------------------------------------------------------
   PRIVATE
   PUBLIC :: StrmGWConnector_v411_Type                   , &
-            SafeNodeType
+            SafeNodeType, &
+            OffsetPointListType
+
+  TYPE OffsetPointListType
+    INTEGER       :: Npoints ! 
+    INTEGER       :: elemID(20) ! The element id that each point belongs to
+    INTEGER       :: Nsides(20) ! How many sides the element has
+    REAL(8)       :: COEF1(20)
+    REAL(8)       :: COEF2(20)
+    REAL(8)       :: COEF3(20)
+    REAL(8)       :: COEF4(20)
+    INTEGER       :: ID1(20)
+    INTEGER       :: ID2(20)
+    INTEGER       :: ID3(20)
+    INTEGER       :: ID4(20)
+    REAL(8)       :: AvHead
+
+   CONTAINS
+    PROCEDURE,PASS :: InitializePL
+    PROCEDURE,PASS :: AddPoint
+    PROCEDURE,PASS :: CalculateHead
+    
+  END TYPE OffsetPointListType
 
   TYPE SafeNodeType
       INTEGER       :: IRV
@@ -85,6 +107,12 @@ MODULE Class_StrmGWConnector_v411
       REAL(8)       :: QR_elem(20)
       REAL(8)       :: QL_node
       REAL(8)       :: QR_node
+      REAL(8)       :: GHead
+      REAL(8)       :: SHead
+      REAL(8)       :: Wper
+      REAL(8)       :: Gamma
+      TYPE(OffsetPointListType) :: LeftPoints
+      TYPE(OffsetPointListType) :: RightPoints
       
   CONTAINS
       PROCEDURE,PASS :: isElemInList
@@ -107,6 +135,7 @@ MODULE Class_StrmGWConnector_v411
       REAL(8),ALLOCATABLE :: Kv(:) ! vertical  hydraulic conductivity
       REAL(8),ALLOCATABLE :: e_cl(:) ! Thickness of clogging layer
       REAL(8),ALLOCATABLE :: K_cl(:) ! Conductivity of clogging layer
+      REAL(8),ALLOCATABLE :: h_ce(:) ! Entry pressure
       REAL(8),ALLOCATABLE :: L(:) ! Representative length for each stream node
       REAL(8),ALLOCATABLE :: Sy(:) ! Spesific yield
       REAL(8)           :: CondTemp ! This stores the compiled conductivity of the first node and it is used to calculate the time factor during simulation
@@ -120,6 +149,9 @@ MODULE Class_StrmGWConnector_v411
       PROCEDURE,PASS :: CompileConductance => StrmGWConnector_v411_CompileConductance
       PROCEDURE,PASS :: Set_KH_KV_SY       => StrmGWConnector_v411_Set_KH_KV_SY
       PROCEDURE,PASS :: Set_Element_Q      => StrmGWConnector_v411_Set_Element_Q
+      PROCEDURE,PASS :: CalculateLeftRightHeads      => StrmGWConnector_v411_CalculateLeftRightHeads
+      PROCEDURE,PASS :: Calc_Left_Right_Q      => StrmGWConnector_v411_Calc_Left_Right_Q
+      PROCEDURE,PASS :: Calc_IncipDesat      => StrmGWConnector_v411_Calc_IncipDesat
       PROCEDURE,PASS :: Get_SAFE_FLAG      => StrmGWConnector_v411_Get_SAFE_FLAG
       PROCEDURE,PASS :: Set_SAFE_FLAG      => StrmGWConnector_v411_Set_SAFE_FLAG
   END TYPE StrmGWConnector_v411_Type
@@ -158,8 +190,8 @@ CONTAINS
                                      iDownstrmNode,iNode,ErrorCode,iLayer,iStrmNodeID,iGWNodeID,  &
                                      iInteractionType
     REAL(8)                       :: B_DISTANCE,F_DISTANCE,CA,CB,FACTK,FACTL,                     &
-                                     DummyArray(NStrmNodes,3)
-    REAL(8),DIMENSION(NStrmNodes) :: Conductivity, BedThick, Gsafe, Wsafe, LayerBottomElevation, L
+                                     DummyArray(NStrmNodes,4), F_DISTANCE_tmp 
+    REAL(8),DIMENSION(NStrmNodes) :: Conductivity, BedThick, Gsafe, Wsafe, LayerBottomElevation, L, entry_press
     CHARACTER                     :: ALine*500,TimeUnitConductance*6
     LOGICAL                       :: lProcessed(NStrmNodes)
     INTEGER,ALLOCATABLE           :: iGWNodes(:)
@@ -170,11 +202,13 @@ CONTAINS
     
     INTEGER,ALLOCATABLE             :: elemIds(:), faceIds(:)
     REAL(8),ALLOCATABLE             :: VertAreas(:)
-    INTEGER                         :: ielem, ii, jj, faceid, elemA, elemB, id_vert, other_el, cnt_el, kk, fc, nd_a, nd_b
+    INTEGER                         :: ielem, ii, jj, faceid, elemA, elemB, id_vert, other_el, cnt_el, kk, fc, nd_a, nd_b, n_side, id1, id2, id3, id4
     INTEGER                         :: faceNodes(2)
-    REAL(8)                         :: bcx, bcy, ax, ay, bx, by, ab, wa, wb, area_a, area_b, ang, ang_a, ang_b, px, py, vertarea
+    REAL(8)                         :: bcx, bcy, ax, ay, bx, by, cx, cy, pxn, pyn, len, ab, wa, wb, area_a, area_b, ang, ang_a, ang_b, px, py, vertarea, cf1, cf2, cf3, cf4, dst
     LOGICAL                         :: tf, tf1
     TYPE(SafeNodeType),DIMENSION(NStrmNodes)            :: safeType
+    INTEGER,ALLOCATABLE :: Nodes(:)
+    REAL(8),ALLOCATABLE :: Coeff(:)
     
     !Initialize
     Connector%iUseSafe = 1
@@ -214,18 +248,20 @@ CONTAINS
         CALL InFile%ReadData(iAsym,iStat)
         IF (iStat .EQ. 0) THEN
             Connector%iLeftRight = iAsym
+            Connector%iLeftRight = 0
         END IF
 
         CALL InFile%ReadData(iGeoLay,iStat)
 
-        open(99, file = 'safe_test.dat', status = 'UNKNOWN')
-    ELSE
-        open(99, file = 'iwfm_test.dat', status = 'UNKNOWN')
+        !open(9X, file = 'safe_test.dat', status = 'UNKNOWN')
+    !ELSE
+        !open(9X, file = 'iwfm_test.dat', status = 'UNKNOWN')
     END IF
 
     ! Read the layer that the bottom corresponds to the geologic layer
     
-    
+    !write(94,'(I5)') NStrmNodes 
+        
     
     DO indxNode=1,NStrmNodes
         iStrmNodeID = INT(DummyArray(indxNode,1))
@@ -243,6 +279,7 @@ CONTAINS
         lProcessed(iNode)   = .TRUE.
         Conductivity(iNode) = DummyArray(indxNode,2)*FACTK
         BedThick(iNode)     = DummyArray(indxNode,3)*FACTL
+        entry_press(inode)  = DummyArray(indxNode,4)
         !write(*,*) 'Conductivity',Conductivity(iNode),'BedThick',BedThick(iNode)
         
         ! Initialize the Safetype structure
@@ -252,6 +289,7 @@ CONTAINS
 
     Connector%e_cl = BedThick
     Connector%K_cl = Conductivity
+    Connector%h_ce = entry_press
 
     !Compute conductance (does not include wetted perimeter since it changes with stage dynamically)
     DO indxReach=1,SIZE(UpstrmNodes)
@@ -291,6 +329,17 @@ CONTAINS
             rNodeArea               = AppGrid%AppNode(iGWUpstrmNode)%Area
             Wsafe(indxNode-1)       = rNodeArea/(2*(F_DISTANCE+B_DISTANCE))
             Gsafe(indxNode-1)       = 2*Wsafe(indxNode-1)
+
+            IF (indxNode .LT. iDownstrmNode) THEN
+                CA = AppGrid%X(iGWNode) - AppGrid%X(iGWNodes(indxNode+1))
+                CB = AppGrid%Y(iGWNode) - AppGrid%Y(iGWNodes(indxNode+1))
+                F_DISTANCE_tmp = SQRT(CA*CA + CB*CB)/2d0
+                Wsafe(indxNode) = AppGrid%AppNode(iGWNodes(indxNode))%Area/(2*(F_DISTANCE+F_DISTANCE_tmp))
+                Gsafe(indxNode)       = 2*Wsafe(indxNode)
+            ELSE IF (indxNode .EQ. iDownstrmNode) THEN
+                Wsafe(indxNode) = AppGrid%AppNode(iGWNodes(indxNode))%Area/(2*F_DISTANCE)
+                Gsafe(indxNode)       = 2*Wsafe(indxNode)
+            END IF
             !write(*,*) 'indxNode:', indxNode-1, 'iGWNode:', iGWNode, 'rNodeArea:', rNodeArea, 'Wsafe:', Wsafe(indxNode-1), 'Gsafe:', Gsafe(indxNode-1), 'L:', (F_DISTANCE+B_DISTANCE)
             
             B_DISTANCE                = F_DISTANCE
@@ -364,7 +413,90 @@ CONTAINS
                     CALL safeType(indxNode)%AddElemOnSide(elemB, 2, wb, nd_b)
                     CALL safeType(indxNode)%AddElemOnSide(elemA, 1, wa, nd_a)
                 END IF
-            END IF            
+            END IF
+            
+            ! Find a number of points on either side of the river segments at a given distance
+            ax = AppGrid%X(iGWNode) - AppGrid%X(iGWUpstrmNode) !This is the vector along the stream
+            ay = AppGrid%Y(iGWNode) - AppGrid%Y(iGWUpstrmNode)
+            len = SQRT(ax*ax + ay*ay)
+            ax = ax/len
+            ay = ay/len
+
+            ! Left Perpendicular vector
+            bx = -ay
+            by = ax
+
+            ! Righ Perpendicular vector
+            cx = ay
+            cy = -ax
+            ab = 0.01
+            DO WHILE (ab .LE. 1.0)
+                ! This is the point to shoot the vector from
+                px = AppGrid%X(iGWUpstrmNode)*(1.0-ab) + AppGrid%X(iGWNode)*ab
+                py = AppGrid%Y(iGWUpstrmNode)*(1.0-ab) + AppGrid%Y(iGWNode)*ab
+                !write(*,*) 'plot(', px, ',' , py, ',".")'
+                ! Left point
+                dst = (Gsafe(indxNode-1)*(1.0-ab) + Gsafe(indxNode)*ab)/2.0
+                pxn = px + dst*bx
+                pyn = py + dst*by
+                !write(*,*) 'plot(', pxn, ',' , pyn, ',"x")'
+                CALL AppGrid%FEInterpolate(pxn,pyn,ielem,Nodes,Coeff)
+
+                IF (ielem .NE.0) THEN
+                    cf1 = Coeff(1)
+                    cf2 = Coeff(2)
+                    cf3 = Coeff(3)
+                    id1 = Nodes(1)
+                    id2 = Nodes(2)
+                    id3 = Nodes(3)
+                    IF (SIZE(Coeff) .EQ. 3) THEN
+                        n_side = 3
+                        cf4 = 0.0
+                        id4 = 0
+                    ELSE
+                        n_side = 4
+                        cf4 = Coeff(4)
+                        id4 = Nodes(4)
+                    END IF
+                    if (ab .LT. 0.5)THEN
+                        CALL safeType(indxNode-1)%LeftPoints%AddPoint(ielem, n_side, cf1, cf2, cf3, cf4, id1, id2, id3, id4)
+                    ELSE
+                        CALL safeType(indxNode)%LeftPoints%AddPoint(ielem, n_side, cf1, cf2, cf3, cf4, id1, id2, id3, id4)
+                    END IF
+                END IF
+
+                ! Right point
+                pxn = px + dst*cx
+                pyn = py + dst*cy
+                !write(*,*) 'plot(', pxn, ',' , pyn, ',"x")'
+                CALL AppGrid%FEInterpolate(pxn,pyn,ielem,Nodes,Coeff)
+                
+                IF (ielem .NE.0) THEN
+                    cf1 = Coeff(1)
+                    cf2 = Coeff(2)
+                    cf3 = Coeff(3)
+                    id1 = Nodes(1)
+                    id2 = Nodes(2)
+                    id3 = Nodes(3)
+                    IF (SIZE(Coeff) .EQ. 3) THEN
+                        n_side = 3
+                        cf4 = 0.0
+                        id4 = 0
+                    ELSE
+                        n_side = 4
+                        cf4 = Coeff(4)
+                        id4 = Nodes(4)
+                    END IF
+                    if (ab .LT. 0.5)THEN
+                        CALL safeType(indxNode-1)%RightPoints%AddPoint(ielem, n_side, cf1, cf2, cf3, cf4, id1, id2, id3, id4)
+                    ELSE
+                        CALL safeType(indxNode)%RightPoints%AddPoint(ielem, n_side, cf1, cf2, cf3, cf4, id1, id2, id3, id4)
+                    END IF
+                END IF
+
+                ab = ab + 0.1089
+            END DO
+            
         END DO
         
         safeType(iDownstrmNode)%IRV = iDownstrmNode
@@ -554,6 +686,8 @@ CONTAINS
     
     open(98, file = 'leftRight.dat', status = 'UNKNOWN')
     DO kk = 1,NStrmNodes
+        !write(94,'(I5, F10.5)') kk,  Connector%rDisconnectElev(kk)
+
         DO ii=1,safeType(kk)%sideL_Nel
             write(98,'(I5, I5, I5, I5)') safeType(kk)%IRV, safeType(kk)%IGW, safeType(kk)%sideL_elem(ii), 1
         END DO
@@ -589,34 +723,40 @@ CONTAINS
     INTEGER           :: iGWNode,iNodes_Connect(2),iNodes_RHS(2),indxStrm
     REAL(8)           :: rUnitConductance,rUpdateCOEFF(2),rUpdateCOEFF_Keep(2),rUpdateRHS(2),rDiff_GW,rGWHead,      &
                          rDiffGWSQRT,rStrmGWFlow,rStrmGWFlowAdj,rStrmGWFlowAdjSQRT,rDStrmGWFlowAdj,rFractionForGW,  &
-                         rNodeAvailableFlow,rWetPerimeter,rdWetPerimeter,rHeadDiff,rConductance, &
+                         rNodeAvailableFlow,rWetPerimeter, rdWetPerimeter, rHeadDiff,rConductance, &
                          Daq, nDp, nWp, kappa, G_flat, a1, a2, G_iso, riverWidth, rHstage, Bsafe, Delta, &
                          Gamma_Q, rho_anis, rStrmGWFlow_SAFE, rTimeFactor, rConductance_SAFE, ksi_safe, delta_anis, gamma_iso_D_anis, R_f, G_anis, &
                          Gamma_QL, Gamma_QR, h_L, h_R, h_mean, Gamma_flat_L, Gamma_flat_R, Gamma_iso_L, Gamma_iso_R,  &
-                         Delta_L, Delta_R, G_iso_Danis_L, G_iso_Danis_R, G_anis_L, G_anis_R
+                         Delta_L, Delta_R, G_iso_Danis_L, G_iso_Danis_R, G_anis_L, G_anis_R, fracR, fracL, hLtmp, hRtmp, hicnip, h_ce, hicnip1, hicnip2
     INTEGER,PARAMETER :: iCompIDs(2) = [f_iStrmComp , f_iGWComp]
 
-    INTEGER           ::  localAsym
+    !INTEGER           ::  localAsym
 
-    localAsym = Connector%iLeftRight
-    open(97, file = 'STREAM_MATRIX_TERMS.dat', status = 'UNKNOWN')
+    !localAsym = Connector%iLeftRight
+    !open(97, file = 'STREAM_MATRIX_TERMS.dat', status = 'UNKNOWN')
     !Connector%iUseSafe = 1
     
-    open(95, file = 'steamNode_Qterms.dat', status = 'UNKNOWN')
+    !open(95, file = 'steamNode_Qterms.dat', status = 'UNKNOWN')
+    
+    
+    !open(93, file = 'LeftRightHeadsTMP.dat', status = 'UNKNOWN')
         
             
         
 
     !Update matrix equations
     DO indxStrm=1,SIZE(rStrmHeads)
+
+        !write(94,'(I5, F15.5, F15.5)') indxStrm,  rGWHeads(indxStrm), rStrmHeads(indxStrm)
+
         !write(*,*) 'indxStrm:', indxStrm
         !Corresponding GW node
         iGWNode        = (Connector%iLayer(indxStrm)-1) * iNNodes + Connector%iGWNode(indxStrm)
         rFractionForGW = Connector%rFractionForGW(indxStrm)
         
-        write(95,'(I10, F20.5, F20.5, F20.5, F20.5, F20.5, F20.5, F20.5, F20.5)') iGWNode, rGWHeads(indxStrm), rStrmHeads(indxStrm), Connector%rDisconnectElev(indxStrm), & 
-            Connector%SafeNode(indxStrm)%QL_node, Connector%SafeNode(indxStrm)%QR_node, & 
-            Connector%SafeNode(indxStrm)%TotAreaL, Connector%SafeNode(indxStrm)%TotAreaR, Connector%Sy(indxStrm)
+        !write(95,'(I10, F20.5, F20.5, F20.5, F20.5, F20.5, F20.5, F20.5, F20.5)') iGWNode, rGWHeads(indxStrm), rStrmHeads(indxStrm), Connector%rDisconnectElev(indxStrm), & 
+        !    Connector%SafeNode(indxStrm)%QL_node, Connector%SafeNode(indxStrm)%QR_node, & 
+        !    Connector%SafeNode(indxStrm)%TotAreaL, Connector%SafeNode(indxStrm)%TotAreaR, Connector%Sy(indxStrm)
 
         !Unit conductance
         rUnitConductance  = Connector%Conductance(indxStrm)      !For this version of StrmGWConnector, original conductance does not include wetted perimeter
@@ -625,6 +765,9 @@ CONTAINS
         rGWHead     = rGWHeads(indxStrm)
         rDiff_GW    = rGWHead - Connector%rDisconnectElev(indxStrm)
         rDiffGWSQRT = SQRT(rDiff_GW*rDiff_GW + f_rSmoothMaxP)
+
+        Connector%SafeNode(indxStrm)%GHead = rGWHead
+        Connector%SafeNode(indxStrm)%SHead = rStrmHeads(indxStrm)
         
         !Wetted perimeter and conductance
         !write(*,*) 'rGWHead', rGWHead, 'rStrmHeads(indxStrm)', rStrmHeads(indxStrm)
@@ -633,8 +776,10 @@ CONTAINS
         ELSE
             CALL WetPerimeterFunction(indxStrm)%EvaluateAndDerivative(MAX(rGWHead,rStrmHeads(indxStrm)),rWetPerimeter,rdWetPerimeter) 
         END IF
-        write(*,*) 'indxStrm:', indxStrm, 'rWetPerimeter:', rWetPerimeter
+        !write(*,*) 'indxStrm:', indxStrm, 'rWetPerimeter:', rWetPerimeter
         
+        Connector%SafeNode(indxStrm)%Wper = rWetPerimeter
+
         rConductance = rUnitConductance * rWetPerimeter
         ! The code above is the standard code for version 4.1
         
@@ -646,16 +791,46 @@ CONTAINS
         IF ((Connector%SafeNode(indxStrm)%sideL_Nel .EQ. 0) .OR. (Connector%SafeNode(indxStrm)%sideR_Nel .EQ. 0)) THEN
             Connector%iLeftRight = 0
         END IF
-
+        
+        ! Calculate Heads based on element flows
         IF (Connector%iLeftRight .EQ. 1) THEN
-            h_L = rGWHead + (Connector%SafeNode(indxStrm)%QR_node - Connector%SafeNode(indxStrm)%QL_node)/(Connector%SafeNode(indxStrm)%TotAreaL * Connector%Sy(indxStrm))
-            h_R = rGWHead + (Connector%SafeNode(indxStrm)%QL_node - Connector%SafeNode(indxStrm)%QR_node)/(Connector%SafeNode(indxStrm)%TotAreaR * Connector%Sy(indxStrm))
+            fracL = Connector%SafeNode(indxStrm)%TotAreaL/(Connector%SafeNode(indxStrm)%TotAreaL + Connector%SafeNode(indxStrm)%TotAreaR)
+            fracR = Connector%SafeNode(indxStrm)%TotAreaR/(Connector%SafeNode(indxStrm)%TotAreaL + Connector%SafeNode(indxStrm)%TotAreaR)
+            hLtmp = rGWHead - (Connector%SafeNode(indxStrm)%QL_node * fracR - Connector%SafeNode(indxStrm)%QR_node * fracL) / &
+                             (Connector%SafeNode(indxStrm)%TotAreaL * Connector%Sy(indxStrm))
+            hRtmp = rGWHead - (Connector%SafeNode(indxStrm)%QR_node * fracL - Connector%SafeNode(indxStrm)%QL_node * fracR) / &
+                             (Connector%SafeNode(indxStrm)%TotAreaR * Connector%Sy(indxStrm))
         END IF
+
+        ! Calculate Heads based on heads
+        IF (Connector%iLeftRight .EQ. 1) THEN
+            h_L = Connector%SafeNode(indxStrm)%LeftPoints%AvHead
+            h_R = Connector%SafeNode(indxStrm)%RightPoints%AvHead
+            IF (ISNAN(h_L)) THEN
+                IF (ISNAN(h_R)) THEN
+                    write(*,*) 'Both heads left and right are NAN'
+                ELSE
+                    h_L = h_R
+                END IF
+            END IF
+            IF (ISNAN(h_R)) THEN
+                IF (ISNAN(h_L)) THEN
+                    write(*,*) 'Both heads left and right are NAN'
+                ELSE
+                    h_R = h_L
+                END IF
+            END IF
+        END IF
+
+        !write(93,'(I5, F15.5, F15.5, F15.5, F15.5)') indxStrm,  hLtmp, hRtmp, h_L, h_R
+        
+        !h_L = hLtmp
+        !h_R = hRtmp
 
 
         ! -------  Flat Conductance
 !        write(*,*) 'rStrmHeads', rStrmHeads(indxStrm), 'rGWHead', rGWHead, 'rDisconnectElev', Connector%rDisconnectElev(indxStrm)
-        rHstage = rStrmHeads(indxStrm) - Connector%rDisconnectElev(indxStrm) - Connector%e_cl(indxStrm)
+        rHstage = rStrmHeads(indxStrm) - Connector%rDisconnectElev(indxStrm)! - Connector%e_cl(indxStrm)
         IF (rHstage .LT. 0) THEN
             rHstage = 0.0
         END IF
@@ -773,6 +948,8 @@ CONTAINS
             END IF
         END IF
 
+        Connector%SafeNode(indxStrm)%Gamma = Gamma_Q
+
         !------- Final calculation of stream water interaction
 !        write(*,*) 'L', Connector%L(indxStrm), 'Kh', Connector%Kh(indxStrm), 'G_Q', Gamma_Q
         IF (Connector%iLeftRight .EQ. 0) THEN
@@ -785,6 +962,18 @@ CONTAINS
             !                    Connector%L(indxStrm) * Connector%Kh(indxStrm) * Gamma_QB * rTimeFactor * (rStrmHeads(indxStrm) - MAX(h_B,Connector%rDisconnectElev(indxStrm))) 
         END IF    
 
+        IF (Connector%iUseSafe .EQ. 1) THEN
+            h_ce = 1.64042 ! 50 cm 
+            hicnip1 = (0.5*rWetPerimeter)/(Connector%Kh(indxStrm)*Gamma_Q)
+            IF (ISNAN(hicnip1)) THEN
+                hicnip1 = 0
+            END IF
+            hicnip2 = rHstage + Connector%e_cl(indxStrm) + h_ce
+            hicnip = rStrmHeads(indxStrm) - hicnip1 * Connector%K_cl(indxStrm) * (hicnip2/Connector%e_cl(indxStrm))
+
+        END IF
+
+
         
         
         !Available flow for node
@@ -792,8 +981,8 @@ CONTAINS
         
         !Calculate stream-gw interaction and update of Jacobian
         !--------------------------------------------
-        IF (Connector%iUseSafe .EQ. 1) THEN
-            rHeadDiff   = rStrmHeads(indxStrm) - MAX(rGWHead,Connector%rDisconnectElev(indxStrm)) !rGWHead
+        IF ((Connector%iUseSafe .EQ. 1) .AND. ( rGWHead .GT. Connector%rDisconnectElev(indxStrm) ) ) THEN
+            rHeadDiff   = rStrmHeads(indxStrm) - rGWHead !rGWHead
         ELSE
             rHeadDiff   = rStrmHeads(indxStrm) - MAX(rGWHead,Connector%rDisconnectElev(indxStrm))
         END IF
@@ -899,24 +1088,25 @@ CONTAINS
         rUpdateRHS(2) = -Connector%StrmGWFlow(indxStrm) * rFractionForGW
         CALL Matrix%UpdateRHS(iCompIDs,iNodes_RHS,rUpdateRHS)
         
-        write(97,'(I5, I5, F35.5, F35.5, F35.5, F35.5)') & 
-        indxStrm, iGWNode, rUpdateCOEFF(1), rUpdateCOEFF(2), rUpdateRHS(1), rUpdateRHS(2)
+        !write(97,'(I5, I5, F35.5, F35.5, F35.5, F35.5)') & 
+        !indxStrm, iGWNode, rUpdateCOEFF(1), rUpdateCOEFF(2), rUpdateRHS(1), rUpdateRHS(2)
 
-        write(99,'(I5, I5, F15.5, F15.5, F15.5, F15.5, F15.5, F15.5, F15.5, F15.5)') & 
-        indxStrm, iGWNode, rStrmHeads(indxStrm), rGWHead, Connector%rDisconnectElev(indxStrm), rHstage, &
-        rHeadDiff, rUpdateRHS(1), rUpdateCOEFF_Keep(1), rUpdateCOEFF_Keep(2)
+        !write(99,'(I5, I5, F15.5, F15.5, F15.5, F15.5, F15.5, F15.5, F15.5, F15.5)') & 
+        !indxStrm, iGWNode, rStrmHeads(indxStrm), rGWHead, Connector%rDisconnectElev(indxStrm), rHstage, &
+        !rHeadDiff, rUpdateRHS(1), rUpdateCOEFF_Keep(1), rUpdateCOEFF_Keep(2)
 
-        Connector%iLeftRight = localAsym
+        !Connector%iLeftRight = localAsym
     END DO
     
-    IF (Connector%iUseSafe .EQ. 1) THEN
-        write(*,*) "SAFE"
-    ELSE
-        write(*,*) "IWFM 4.1"
-    END IF
+    !IF (Connector%iUseSafe .EQ. 1) THEN
+    !    write(*,*) "SAFE"
+    !ELSE
+    !    write(*,*) "IWFM 4.1"
+    !END IF
 
-    close(95)
-    close(97)
+    !close(95)
+    !close(97)
+    !close(93)
 
 
   END SUBROUTINE StrmGWConnector_v411_Simulate
@@ -939,6 +1129,12 @@ CONTAINS
     INTEGER,INTENT(OUT)                 :: iStat
     INTEGER                             :: inode, ii
     
+    iStat = 0;
+    IF (Connector%iUseSafe == 0) THEN
+        RETURN
+    END IF
+
+
     DO inode = 1,SIZE(Connector%SafeNode)
         DO ii = 1,Connector%SafeNode(inode)%sideL_Nel
             Connector%SafeNode(inode)%QL_elem(ii) = Q(Connector%SafeNode(inode)%sideL_elem(ii))*Connector%SafeNode(inode)%WL(ii)
@@ -951,8 +1147,196 @@ CONTAINS
         CALL Connector%SafeNode(inode)%CalculateTotalQLR
     END DO
     
-    iStat = 0;
   END SUBROUTINE StrmGWConnector_v411_Set_Element_Q
+
+
+  SUBROUTINE StrmGWConnector_v411_CalculateLeftRightHeads(Connector, GWHeads, iStat)
+    CLASS(StrmGWConnector_v411_Type)    :: Connector
+    REAL(8),INTENT(IN)                  :: GWHeads(:,:)
+    INTEGER,INTENT(OUT)                 :: iStat
+    INTEGER                             :: inode
+    iStat = 0;
+    IF (Connector%iUseSafe == 0) THEN
+        RETURN
+    END IF
+    
+    DO inode = 1,SIZE(Connector%SafeNode)
+        CALL Connector%SafeNode(inode)%LeftPoints%CalculateHead(GWHeads)
+        CALL Connector%SafeNode(inode)%RightPoints%CalculateHead(GWHeads)
+    END DO
+    
+  END SUBROUTINE StrmGWConnector_v411_CalculateLeftRightHeads
+
+
+  SUBROUTINE StrmGWConnector_v411_Calc_Left_Right_Q(Connector, iStat)
+    CLASS(StrmGWConnector_v411_Type)    :: Connector
+    INTEGER,INTENT(OUT)                 :: iStat
+    !INTEGER,INTENT(IN)                  :: iNNodes
+    !REAL(8),INTENT(IN)                  :: rGWHeads(:),rStrmHeads(:)
+    !CLASS(AbstractFunctionType),OPTIONAL,INTENT(IN) :: WetPerimeterFunction(:)
+    INTEGER                             :: indxStrm, iGWNode
+    REAL(8)                             :: rUnitConductance, rGWHead, rSHead, rTimeFactor, rWetPerimeter,  &
+    fracL, fracR, hLtmp, hRtmp, h_L, h_R, rHstage, Daq, nDp, nWp, kappa, G_flat, &
+    a1, a2, riverWidth, Bsafe, h_mean, Gamma_flat_L, Gamma_flat_R, Gamma_iso_L, Gamma_iso_R, &
+    Delta_L, Delta_R, Gamma_QL, Gamma_QR, rho_anis, delta_anis, ksi_safe, R_f, G_iso_Danis_L, G_iso_Danis_R, &
+    G_anis_L, G_anis_R, Qsint_L, Qsint_R
+    
+    
+    iStat = 1
+    IF (Connector%iUseSafe == 0) THEN
+        RETURN
+    END IF
+
+    rTimeFactor = Connector%Conductance(1) / Connector%CondTemp
+    DO indxStrm=1,SIZE(Connector%Conductance)
+        !iGWNode        = (Connector%iLayer(indxStrm)-1) * iNNodes + Connector%iGWNode(indxStrm)
+        rUnitConductance  = Connector%Conductance(indxStrm)
+        rGWHead     = Connector%SafeNode(indxStrm)%GHead
+        rSHead = Connector%SafeNode(indxStrm)%SHead
+        !CALL WetPerimeterFunction(indxStrm)%EvaluateAndDerivative(rStrmHeads(indxStrm),rWetPerimeter,rdWetPerimeter)
+        !CALL WetPerimeterFunction(indxStrm)%EvaluateAndDerivative(MAX(rGWHead,rStrmHeads(indxStrm)),rWetPerimeter,rdWetPerimeter)
+        rWetPerimeter = Connector%SafeNode(indxStrm)%Wper
+        
+        !--------- Calculate head for left and right --------
+        IF ((Connector%SafeNode(indxStrm)%sideL_Nel .GT. 0) .AND. (Connector%SafeNode(indxStrm)%sideR_Nel .GT. 0)) THEN
+            ! Calculate Heads based on element flows
+            !!fracL = Connector%SafeNode(indxStrm)%TotAreaL/(Connector%SafeNode(indxStrm)%TotAreaL + Connector%SafeNode(indxStrm)%TotAreaR)
+            !!fracR = Connector%SafeNode(indxStrm)%TotAreaR/(Connector%SafeNode(indxStrm)%TotAreaL + Connector%SafeNode(indxStrm)%TotAreaR)
+            !!h_L = rGWHead - (Connector%SafeNode(indxStrm)%QL_node * fracR - Connector%SafeNode(indxStrm)%QR_node * fracL) / &
+            !!                (Connector%SafeNode(indxStrm)%TotAreaL * Connector%Sy(indxStrm))
+            !!h_R = rGWHead - (Connector%SafeNode(indxStrm)%QR_node * fracL - Connector%SafeNode(indxStrm)%QL_node * fracR) / &
+            !!                (Connector%SafeNode(indxStrm)%TotAreaR * Connector%Sy(indxStrm))
+
+            ! Calculate heads using the head solution
+            h_L = Connector%SafeNode(indxStrm)%LeftPoints%AvHead
+            h_R = Connector%SafeNode(indxStrm)%RightPoints%AvHead
+        END IF
+
+        ! -------  Flat Conductance
+        rHstage = Connector%SafeNode(indxStrm)%SHead - Connector%rDisconnectElev(indxStrm)
+        IF (rHstage .LT. 0) THEN
+            rHstage = 0.0
+        END IF
+
+        ! TODO According to Hubert we have to add the thickness of the capillary fringe
+        Daq = rGWHead - Connector%LayerBottomElevation(indxStrm) ! + h_ce Where to get this
+        IF (Daq .LE. 0) THEN
+            nDp = 0
+            nWp = 0
+        ELSE
+            nDp = (rHstage) / Daq
+            nWp = rWetPerimeter / Daq
+        END IF
+        kappa = EXP(-PI*(nWp/2))
+!        write(*,*) 'kappa', kappa
+        G_flat = 1 / ( 2*(1 + (1/PI)*LOG(2/(1-kappa ) ) ) )
+
+        ! ------  Isotropic conductance
+        CALL SafeCoefficients(nDp, nWp, a1, a2)
+        
+        riverWidth = rWetPerimeter - 2*rHstage
+        Bsafe = 0.5 * riverWidth
+        h_mean = 0.5*(h_L + h_R)
+        Gamma_flat_L = (1/(rSHead - h_L))*( G_flat * (rSHead - h_mean) + (h_R - h_L)*Daq/(4*Daq + 2*Bsafe) )
+        Gamma_flat_R = (1/(rSHead - h_R))*( G_flat * (rSHead - h_mean) - (h_R - h_L)*Daq/(4*Daq + 2*Bsafe) )
+        Gamma_iso_L = Gamma_flat_L * (1 + a1 * nDp + a2 * nDp * nDp)
+        Gamma_iso_R = Gamma_flat_R * (1 + a1 * nDp + a2 * nDp * nDp)
+
+        ! --- Correction for isotropic or anisotropic aquifer
+        IF (ABS(Connector%Kh(indxStrm) - Connector%Kv(indxStrm)) .LT. 0.1) THEN
+            ! If the node is isotropic
+            Delta_L = Connector%SafeNode(indxStrm)%TotAreaL/(2*Connector%L(indxStrm)) - Bsafe - 2*Daq
+            Delta_R = Connector%SafeNode(indxStrm)%TotAreaR/(2*Connector%L(indxStrm)) - Bsafe - 2*Daq
+            Gamma_QL = Gamma_iso_L / ( 1 + Gamma_iso_L * ( Delta_L/Daq ) )
+            Gamma_QR = Gamma_iso_R / ( 1 + Gamma_iso_R * ( Delta_R/Daq ) )
+
+            ! ---- Correction for clogging layer 
+            Gamma_QL = Gamma_QL / ( 1 + Gamma_QL * (Connector%Kh(indxStrm)/ Connector%K_cl(indxStrm) ) * ( Connector%e_cl(indxStrm)/(Bsafe + rHstage) ) )
+            IF (ISNAN(Gamma_QL)) THEN
+                Gamma_QL = 0    
+            END IF
+            Gamma_QR = Gamma_QR / ( 1 + Gamma_QR * (Connector%Kh(indxStrm)/ Connector%K_cl(indxStrm) ) * ( Connector%e_cl(indxStrm)/(Bsafe + rHstage) ) )
+            IF (ISNAN(Gamma_QR)) THEN
+                Gamma_QR = 0    
+            END IF
+
+        ELSE
+            ! if the node is anisotropic
+            rho_anis = SQRT(Connector%Kv(indxStrm)/Connector%Kh(indxStrm))
+            delta_anis = 2*(1/rho_anis - 1)
+            ksi_safe = (1 - SQRT(nDp))*(1 - SQRT(rho_anis))
+            R_f = 1 - 0.333*ksi_safe - 0.294*ksi_safe*ksi_safe
+            Delta_L = Connector%SafeNode(indxStrm)%TotAreaL/(2*Connector%L(indxStrm)) - Bsafe - 2*Daq/rho_anis
+            Delta_R = Connector%SafeNode(indxStrm)%TotAreaR/(2*Connector%L(indxStrm)) - Bsafe - 2*Daq/rho_anis
+            G_iso_Danis_L = Gamma_iso_L/(1 + Gamma_iso_L*Delta_L)
+            G_iso_Danis_R = Gamma_iso_R/(1 + Gamma_iso_R*Delta_R)
+            G_anis_L = R_f*G_iso_Danis_L
+            G_anis_R = R_f*G_iso_Danis_R
+            Gamma_QL = G_anis_L / ( 1 + G_anis_L * ( Delta_L/Daq ) )
+            Gamma_QR = G_anis_R / ( 1 + G_anis_R * ( Delta_R/Daq ) )
+
+            ! ---- Correction for clogging layer
+            Gamma_QL = Gamma_QL/(1+Gamma_QL * (Connector%Kh(indxStrm)/ Connector%K_cl(indxStrm) ) * &
+            ( ( Gamma_QL*(rSHead - h_L) + Gamma_QR*(rSHead - h_R) )/( Gamma_QL*(rSHead - h_L) ) ) * &
+            ( Connector%e_cl(indxStrm)/(2*(Bsafe + rHstage)) ))
+            IF (ISNAN(Gamma_QL)) THEN
+                Gamma_QL = 0    
+            END IF
+            Gamma_QR = Gamma_QR/(1+Gamma_QR * (Connector%Kh(indxStrm)/ Connector%K_cl(indxStrm) ) * &
+                        ( ( Gamma_QL*(rSHead - h_L) + Gamma_QR*(rSHead - h_R) )/( Gamma_QR*(rSHead - h_R) ) ) * &
+                        ( Connector%e_cl(indxStrm)/(2*(Bsafe + rHstage)) ))
+            IF (ISNAN(Gamma_QR)) THEN
+                Gamma_QR = 0    
+            END IF
+        END IF
+
+        Qsint_L = Connector%L(indxStrm) * Connector%Kh(indxStrm) * Gamma_QL * rTimeFactor
+        Qsint_R = Connector%L(indxStrm) * Connector%Kh(indxStrm) * Gamma_QR * rTimeFactor
+        write(99,'(I5, F15.5, F15.5)') indxStrm, Qsint_L, Qsint_R
+        
+
+    END DO
+
+  END SUBROUTINE StrmGWConnector_v411_Calc_Left_Right_Q
+
+  SUBROUTINE StrmGWConnector_v411_Calc_IncipDesat(Connector, iStat)
+    CLASS(StrmGWConnector_v411_Type)    :: Connector
+    INTEGER,INTENT(OUT)                 :: iStat
+    INTEGER                             :: indxStrm
+    REAL(8)                             :: rWetPerimeter, gamma, hicnip1, hicnip2, hicnip, rHstage
+
+    iStat = 0
+    
+    iStat = 1
+    IF (Connector%iUseSafe == 0) THEN
+        RETURN
+    END IF
+
+
+    DO indxStrm=1,SIZE(Connector%Conductance)
+        rWetPerimeter = Connector%SafeNode(indxStrm)%Wper
+        gamma = Connector%SafeNode(indxStrm)%Gamma
+        IF (gamma .EQ. 0) THEN
+            hicnip1 = 0
+        ELSE
+            hicnip1 = (0.5*rWetPerimeter)/(Connector%Kh(indxStrm)*gamma)
+            IF (ISNAN(hicnip1)) THEN
+                hicnip1 = 0
+            END IF
+        END IF
+        rHstage = Connector%SafeNode(indxStrm)%SHead - Connector%rDisconnectElev(indxStrm)
+        IF (rHstage .LT. 0) THEN
+            rHstage = 0.0
+        END IF
+        hicnip2 = rHstage + Connector%e_cl(indxStrm) + Connector%h_ce(indxStrm)
+        hicnip = Connector%SafeNode(indxStrm)%SHead - hicnip1 * Connector%K_cl(indxStrm) * (hicnip2/Connector%e_cl(indxStrm))
+        write(98,'(I5, F15.5, F15.5, F15.5, F15.5)') indxStrm, hicnip, Connector%SafeNode(indxStrm)%GHead,  Connector%SafeNode(indxStrm)%SHead, Connector%rDisconnectElev(indxStrm)
+
+    END DO
+
+
+  END SUBROUTINE StrmGWConnector_v411_Calc_IncipDesat
+
 
   
   SUBROUTINE StrmGWConnector_v411_Get_SAFE_FLAG(Connector, iflag)
@@ -986,7 +1370,7 @@ CONTAINS
             a2 = -0.387
             RETURN
         ELSE
-            write(*,*) 'Unexpected range of normalized wetted perimeter:', nWp, 'and normalized degree of penetration', nDp
+            !write(*,*) 'Unexpected range of normalized wetted perimeter:', nWp, 'and normalized degree of penetration', nDp
             RETURN
         END IF
     ELSE IF (nWp .GT. 1 .AND. nWp .LE. 3) THEN
@@ -1003,11 +1387,11 @@ CONTAINS
             a2 = -0.33
             RETURN
         ELSE
-            write(*,*) 'Unexpected range of normalized wetted perimeter:', nWp, 'and normalized degree of penetration', nDp
+            !write(*,*) 'Unexpected range of normalized wetted perimeter:', nWp, 'and normalized degree of penetration', nDp
             RETURN
         END IF
     ELSE
-        write(*,*) 'Unexpected range of normalized wetted perimeter:', nWp
+        !write(*,*) 'Unexpected range of normalized wetted perimeter:', nWp
         RETURN
     END IF
   END SUBROUTINE SafeCoefficients
@@ -1094,6 +1478,7 @@ CONTAINS
     END IF
     
   END SUBROUTINE AddElemOnSide
+
   
   ! -------------------------------------------------------------
   ! --- Initialize the variable with negative values
@@ -1111,6 +1496,8 @@ CONTAINS
     SafeNode%TotArea = 0
     SafeNode%QL_node = 0
     SafeNode%QR_node = 0
+    CALL SafeNode%LeftPoints%InitializePL
+    CALL SafeNode%RightPoints%InitializePL
     
     DO ii=1,SIZE(SafeNode%sideL_elem)
         SafeNode%sideL_elem(ii) = -9
@@ -1276,5 +1663,73 @@ CONTAINS
     END IF
 
   END SUBROUTINE
-  
+
+  SUBROUTINE InitializePL(OffsetPointList)
+    CLASS (OffsetPointListType),INTENT(OUT)  :: OffsetPointList
+    INTEGER                           :: ii
+    OffsetPointList%Npoints = 0
+    OffsetPointList%AvHead = 0.0
+    DO ii=1,SIZE(OffsetPointList%elemID) 
+        OffsetPointList%elemID(ii) = 0
+        OffsetPointList%Nsides(ii) = 0
+        OffsetPointList%COEF1(ii) = 0.0
+        OffsetPointList%COEF2(ii) = 0.0
+        OffsetPointList%COEF3(ii) = 0.0
+        OffsetPointList%COEF4(ii) = 0.0
+        OffsetPointList%ID1(ii) = 0
+        OffsetPointList%ID2(ii) = 0
+        OffsetPointList%ID3(ii) = 0
+        OffsetPointList%ID4(ii) = 0
+    END DO
+
+  END SUBROUTINE InitializePL  
+
+  SUBROUTINE AddPoint(OffsetPointList, elem, Nside, cf1, cf2, cf3, cf4, id1, id2, id3, id4)
+    CLASS (OffsetPointListType),INTENT(OUT)  :: OffsetPointList
+    INTEGER,INTENT(IN)                :: elem
+    INTEGER,INTENT(IN)                :: Nside, id1, id2, id3, id4
+    REAL(8),INTENT(IN)                :: cf1, cf2, cf3, cf4
+    OffsetPointList%Npoints = OffsetPointList%Npoints+1
+    IF (OffsetPointList%Npoints .GT. SIZE(OffsetPointList%elemID)) THEN
+        write(*,*) 'Increase the OffsetPointList size and recompile!'
+        RETURN
+    END IF
+    OffsetPointList%elemID(OffsetPointList%Npoints) = elem
+    OffsetPointList%Nsides(OffsetPointList%Npoints) = Nside
+    OffsetPointList%COEF1(OffsetPointList%Npoints) = cf1
+    OffsetPointList%COEF2(OffsetPointList%Npoints) = cf2
+    OffsetPointList%COEF3(OffsetPointList%Npoints) = cf3
+    OffsetPointList%COEF4(OffsetPointList%Npoints) = cf4
+    OffsetPointList%ID1(OffsetPointList%Npoints) = id1
+    OffsetPointList%ID2(OffsetPointList%Npoints) = id2
+    OffsetPointList%ID3(OffsetPointList%Npoints) = id3
+    OffsetPointList%ID4(OffsetPointList%Npoints) = id4
+
+  END SUBROUTINE AddPoint
+
+  SUBROUTINE CalculateHead(OffsetPointList, rGWHeads)
+    CLASS (OffsetPointListType),INTENT(OUT)     :: OffsetPointList
+    REAL(8),INTENT(IN)              :: rGWHeads(:,:)
+    INTEGER                         :: ii
+
+    OffsetPointList%AvHead = 0.0
+    DO ii=1,OffsetPointList%Npoints
+        IF (OffsetPointList%Nsides(ii) .EQ. 4) THEN
+            OffsetPointList%AvHead = OffsetPointList%AvHead + &
+                    rGWHeads(OffsetPointList%ID1(ii),1) * OffsetPointList%COEF1(ii) + &
+                    rGWHeads(OffsetPointList%ID2(ii),1) * OffsetPointList%COEF2(ii) + &
+                    rGWHeads(OffsetPointList%ID3(ii),1) * OffsetPointList%COEF3(ii) + &
+                    rGWHeads(OffsetPointList%ID4(ii),1) * OffsetPointList%COEF4(ii)
+        ELSE IF (OffsetPointList%Nsides(ii) .EQ. 3) THEN
+            OffsetPointList%AvHead = OffsetPointList%AvHead + &
+                    rGWHeads(OffsetPointList%ID1(ii),1) * OffsetPointList%COEF1(ii) + &
+                    rGWHeads(OffsetPointList%ID2(ii),1) * OffsetPointList%COEF2(ii) + &
+                    rGWHeads(OffsetPointList%ID3(ii),1) * OffsetPointList%COEF3(ii)
+        END IF
+    END DO
+    OffsetPointList%AvHead = OffsetPointList%AvHead / REAL(OffsetPointList%Npoints)
+
+
+  END SUBROUTINE CalculateHead
+
 END MODULE

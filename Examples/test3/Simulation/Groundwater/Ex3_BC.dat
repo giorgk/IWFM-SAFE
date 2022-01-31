@@ -24,7 +24,7 @@ C-------------------------------------------------------------------------------
 C     VALUE                       DESCRIPTION
 C-------------------------------------------------------------------------------
         / SPFLOWFL
-        Simulation\Groundwater\Ex3_specHead1.dat / SPHEADFL
+        Groundwater\Ex3_specHead1.dat / SPHEADFL
         / GHBCFL
         / CONGHBCFL
         / TSBCFL 

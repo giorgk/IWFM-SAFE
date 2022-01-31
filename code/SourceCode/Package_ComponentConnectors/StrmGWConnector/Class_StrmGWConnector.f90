@@ -97,6 +97,9 @@ MODULE Class_StrmGWConnector
       PROCEDURE,PASS :: RegisterWithMatrix
       PROCEDURE,PASS :: Set_KH_KV_SY
       PROCEDURE,PASS :: Set_Element_Q
+      PROCEDURE,PASS :: CalculateLeftRightHeads
+      PROCEDURE,PASS :: Calc_Left_Right_Q
+      PROCEDURE,PASS :: Calc_IncipDesat
       PROCEDURE,PASS :: Get_SAFE_FLAG
       PROCEDURE,PASS :: Set_SAFE_FLAG
       GENERIC        :: New      => ReadPreprocessedData              , &
@@ -861,6 +864,43 @@ CONTAINS
     END IF
 
   END SUBROUTINE Set_Element_Q
+
+  SUBROUTINE CalculateLeftRightHeads(Connector, GWHeads, iStat)
+    CLASS(StrmGWConnectorType)  :: Connector
+    REAL(8),INTENT(IN)          :: GWHeads(:,:)
+    INTEGER,INTENT(OUT)         :: iStat
+
+    IF (Connector%lDefined) THEN
+      CALL Connector%Me%CalculateLeftRightHeads(GWHeads,iStat)
+    END IF
+
+  END SUBROUTINE CalculateLeftRightHeads
+
+  SUBROUTINE Calc_Left_Right_Q(Connector, iStat)
+    CLASS(StrmGWConnectorType)  :: Connector
+    INTEGER,INTENT(OUT)               :: iStat
+    !INTEGER,INTENT(IN)          :: iNNodes
+    !REAL(8),INTENT(IN)          :: rGWHeads(:),rStrmHeads(:)
+    !CLASS(AbstractFunctionType),OPTIONAL,INTENT(IN) :: WetPerimeterFunction(:)
+
+    IF (Connector%lDefined) THEN
+      CALL Connector%Me%Calc_Left_Right_Q(iStat)
+    END IF
+
+  END SUBROUTINE Calc_Left_Right_Q
+
+  SUBROUTINE Calc_IncipDesat(Connector, iStat)
+    CLASS(StrmGWConnectorType)  :: Connector
+    INTEGER,INTENT(OUT)               :: iStat
+    !INTEGER,INTENT(IN)          :: iNNodes
+    !REAL(8),INTENT(IN)          :: rGWHeads(:),rStrmHeads(:)
+    !CLASS(AbstractFunctionType),OPTIONAL,INTENT(IN) :: WetPerimeterFunction(:)
+
+    IF (Connector%lDefined) THEN
+      CALL Connector%Me%Calc_IncipDesat(iStat)
+    END IF
+
+  END SUBROUTINE Calc_IncipDesat
 
   SUBROUTINE Get_SAFE_FLAG(Connector, iflag)
     CLASS(StrmGWConnectorType)  :: Connector

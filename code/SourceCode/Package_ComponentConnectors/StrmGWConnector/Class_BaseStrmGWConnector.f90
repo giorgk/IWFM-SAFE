@@ -88,6 +88,9 @@ MODULE Class_BaseStrmGWConnector
     PROCEDURE(Abstract_StrmGWConnector_CompileConductance),PASS,DEFERRED :: CompileConductance
     PROCEDURE(Abstract_StrmGWConnector_Set_KH_KV_SY),PASS,DEFERRED       :: Set_KH_KV_SY
     PROCEDURE(Abstract_StrmGWConnector_Set_Element_Q),PASS,DEFERRED      :: Set_Element_Q
+    PROCEDURE(Abstract_StrmGWConnector_CalculateLeftRightHeads),PASS,DEFERRED      :: CalculateLeftRightHeads
+    PROCEDURE(Abstract_StrmGWConnector_Calc_Left_Right_Q),PASS,DEFERRED      :: Calc_Left_Right_Q
+    PROCEDURE(Abstract_StrmGWConnector_Calc_IncipDesat),PASS,DEFERRED      :: Calc_IncipDesat
     PROCEDURE(Abstract_StrmGWConnector_Get_SAFE_FLAG),PASS,DEFERRED      :: Get_SAFE_FLAG
     PROCEDURE(Abstract_StrmGWConnector_Set_SAFE_FLAG),PASS,DEFERRED      :: Set_SAFE_FLAG
     PROCEDURE,PASS                                                       :: BaseStrmGWConnector_AddGWNodes
@@ -154,6 +157,28 @@ MODULE Class_BaseStrmGWConnector
         REAL(8),INTENT(IN)                :: Q(:)
         INTEGER,INTENT(OUT)               :: iStat
       END SUBROUTINE Abstract_StrmGWConnector_Set_Element_Q
+
+      SUBROUTINE Abstract_StrmGWConnector_CalculateLeftRightHeads(Connector, GWHeads, iStat)
+        IMPORT                            :: BaseStrmGWConnectorType
+        CLASS(BaseStrmGWConnectorType)    :: Connector
+        REAL(8),INTENT(IN)                :: GWHeads(:,:)
+        INTEGER,INTENT(OUT)               :: iStat
+      END SUBROUTINE Abstract_StrmGWConnector_CalculateLeftRightHeads
+
+      SUBROUTINE Abstract_StrmGWConnector_Calc_Left_Right_Q(Connector, iStat)
+        IMPORT                            :: BaseStrmGWConnectorType, AbstractFunctionType
+        CLASS(BaseStrmGWConnectorType)    :: Connector
+        INTEGER,INTENT(OUT)               :: iStat
+        !INTEGER,INTENT(IN)                :: iNNodes
+        !REAL(8),INTENT(IN)                :: rGWHeads(:),rStrmHeads(:)
+        !CLASS(AbstractFunctionType),OPTIONAL,INTENT(IN) :: WetPerimeterFunction(:)
+      END SUBROUTINE Abstract_StrmGWConnector_Calc_Left_Right_Q
+
+      SUBROUTINE Abstract_StrmGWConnector_Calc_IncipDesat(Connector, iStat)
+        IMPORT                            :: BaseStrmGWConnectorType, AbstractFunctionType
+        CLASS(BaseStrmGWConnectorType)    :: Connector
+        INTEGER,INTENT(OUT)               :: iStat
+      END SUBROUTINE Abstract_StrmGWConnector_Calc_IncipDesat
 
       SUBROUTINE Abstract_StrmGWConnector_Get_SAFE_FLAG(Connector, iflag)
         IMPORT                            :: BaseStrmGWConnectorType
