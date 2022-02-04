@@ -727,7 +727,7 @@ CONTAINS
                          Daq, nDp, nWp, kappa, G_flat, a1, a2, G_iso, riverWidth, rHstage, Bsafe, Delta, &
                          Gamma_Q, rho_anis, rStrmGWFlow_SAFE, rTimeFactor, rConductance_SAFE, ksi_safe, delta_anis, gamma_iso_D_anis, R_f, G_anis, &
                          Gamma_QL, Gamma_QR, h_L, h_R, h_mean, Gamma_flat_L, Gamma_flat_R, Gamma_iso_L, Gamma_iso_R,  &
-                         Delta_L, Delta_R, G_iso_Danis_L, G_iso_Danis_R, G_anis_L, G_anis_R, fracR, fracL, hLtmp, hRtmp, hicnip, h_ce, hicnip1, hicnip2
+                         Delta_L, Delta_R, G_iso_Danis_L, G_iso_Danis_R, G_anis_L, G_anis_R, fracR, fracL, hLtmp, hRtmp, hicnip, hicnip1, hicnip2
     INTEGER,PARAMETER :: iCompIDs(2) = [f_iStrmComp , f_iGWComp]
 
     !INTEGER           ::  localAsym
@@ -963,26 +963,34 @@ CONTAINS
         END IF    
 
         IF (Connector%iUseSafe .EQ. 1) THEN
-            h_ce = 1.64042 ! 50 cm 
-            hicnip1 = (0.5*rWetPerimeter)/(Connector%Kh(indxStrm)*Gamma_Q)
-            IF (ISNAN(hicnip1)) THEN
+            IF (Gamma_Q .EQ. 0) THEN
                 hicnip1 = 0
+            ELSE
+                hicnip1 = rWetPerimeter/(2*Connector%Kh(indxStrm)*Gamma_Q)
+                IF (ISNAN(hicnip1)) THEN
+                    hicnip1 = 0
+                END IF
             END IF
-            hicnip2 = rHstage + Connector%e_cl(indxStrm) + h_ce
-            hicnip = rStrmHeads(indxStrm) - hicnip1 * Connector%K_cl(indxStrm) * (hicnip2/Connector%e_cl(indxStrm))
+            hicnip2 = (rHstage + Connector%e_cl(indxStrm) + Connector%h_ce(indxStrm))/Connector%e_cl(indxStrm)
+            hicnip = rStrmHeads(indxStrm) - hicnip1 * Connector%K_cl(indxStrm) * hicnip2
+            !write(97,'(I5, F20.5, F20.5, F20.5, F20.5, F20.5, F20.5)') indxStrm, Connector%rDisconnectElev(indxStrm), rWetPerimeter, Gamma_Q, rStrmHeads(indxStrm), rGWHead, hicnip
 
         END IF
 
-
-        
+        IF ((Connector%iUseSafe .EQ. 1) ) THEN
+            rDiff_GW    = rGWHead - hicnip
+            rDiffGWSQRT = SQRT(rDiff_GW*rDiff_GW + f_rSmoothMaxP)
+        END IF
         
         !Available flow for node
         rNodeAvailableFlow = rAvailableFlows(indxStrm)
         
         !Calculate stream-gw interaction and update of Jacobian
         !--------------------------------------------
-        IF ((Connector%iUseSafe .EQ. 1) .AND. ( rGWHead .GT. Connector%rDisconnectElev(indxStrm) ) ) THEN
-            rHeadDiff   = rStrmHeads(indxStrm) - rGWHead !rGWHead
+        IF ((Connector%iUseSafe .EQ. 1) ) THEN ! .AND. ( rGWHead .GT. Connector%rDisconnectElev(indxStrm) )
+            !rHeadDiff   = rStrmHeads(indxStrm) - rGWHead !rGWHead
+            rHeadDiff   = rStrmHeads(indxStrm) - MAX(rGWHead, hicnip)
+            !write(*,*) indxStrm, rStrmHeads(indxStrm), rGWHead, hicnip, rHeadDiff
         ELSE
             rHeadDiff   = rStrmHeads(indxStrm) - MAX(rGWHead,Connector%rDisconnectElev(indxStrm))
         END IF
@@ -1319,7 +1327,7 @@ CONTAINS
         IF (gamma .EQ. 0) THEN
             hicnip1 = 0
         ELSE
-            hicnip1 = (0.5*rWetPerimeter)/(Connector%Kh(indxStrm)*gamma)
+            hicnip1 = rWetPerimeter/(2*Connector%Kh(indxStrm)*gamma)
             IF (ISNAN(hicnip1)) THEN
                 hicnip1 = 0
             END IF
@@ -1328,8 +1336,8 @@ CONTAINS
         IF (rHstage .LT. 0) THEN
             rHstage = 0.0
         END IF
-        hicnip2 = rHstage + Connector%e_cl(indxStrm) + Connector%h_ce(indxStrm)
-        hicnip = Connector%SafeNode(indxStrm)%SHead - hicnip1 * Connector%K_cl(indxStrm) * (hicnip2/Connector%e_cl(indxStrm))
+        hicnip2 = (rHstage + Connector%e_cl(indxStrm) + Connector%h_ce(indxStrm))/Connector%e_cl(indxStrm)
+        hicnip = Connector%SafeNode(indxStrm)%SHead - hicnip1 * Connector%K_cl(indxStrm) * hicnip2
         write(98,'(I5, F15.5, F15.5, F15.5, F15.5)') indxStrm, hicnip, Connector%SafeNode(indxStrm)%GHead,  Connector%SafeNode(indxStrm)%SHead, Connector%rDisconnectElev(indxStrm)
 
     END DO

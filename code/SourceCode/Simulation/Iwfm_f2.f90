@@ -64,7 +64,9 @@ PROGRAM IWFM_F2
       ELSE
         open(99, file = 'ASYM_QSINT.dat', status = 'UNKNOWN')
         open(98, file = 'IncipDesat.dat', status = 'UNKNOWN')
+        !open(97, file = 'IncipIter.dat', status = 'UNKNOWN')
         CALL Model%Simulate(0,iStat)
+        !close(97)
         close(98)
         close(99)
         close(94)

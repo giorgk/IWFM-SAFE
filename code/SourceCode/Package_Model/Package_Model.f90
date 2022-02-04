@@ -5084,6 +5084,7 @@ CONTAINS
         DO
             CALL Model%Matrix%ResetToZero()
             ITERX = ITERX + 1
+            !write(*,*) 'ITERX', ITERX
             !write(99,'(A5, I1, A120)') 'Iter ', ITERX, 'StrmH            GWH          DiscEl            Hs           HDiff         RHS           COEFF1         COEFF2'
       
 ! ***** GET GW HEAD VALUES TO BE USED IN DIFFERENT COMPONENTS
