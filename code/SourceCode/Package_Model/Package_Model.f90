@@ -5224,8 +5224,9 @@ CONTAINS
     !CALL Model%AppGrid%NodeData_To_ElemData(NodeStorageChange, ElementStorageChange)
     CALL Model%StrmGWConnector%Set_Element_Q(SafeQ, iStat)
     CALL Model%StrmGWConnector%CalculateLeftRightHeads(Model%GWHeads, iStat)
-    CALL Model%StrmGWConnector%Calc_Left_Right_Q(iStat)
     CALL Model%StrmGWConnector%Calc_IncipDesat(iStat)
+    CALL Model%StrmGWConnector%Calc_Left_Right_Q(iStat)
+    
     
   END SUBROUTINE SimulateOneTimeStep
     
