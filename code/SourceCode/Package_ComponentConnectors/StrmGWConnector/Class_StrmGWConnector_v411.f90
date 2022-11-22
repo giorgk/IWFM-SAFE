@@ -1309,8 +1309,8 @@ CONTAINS
         !!!!!!! @@@MODIFICATION@@@@@@  set back .LT. 0.01
         IF (ABS(Connector%Kh(indxStrm) - Connector%Kv(indxStrm)) .LT. 0.1) THEN
             ! If the node is isotropic
-            Delta_L = Connector%SafeNode(indxStrm)%TotAreaL/(Connector%L(indxStrm)) - Bsafe - 2*Daq
-            Delta_R = Connector%SafeNode(indxStrm)%TotAreaR/(Connector%L(indxStrm)) - Bsafe - 2*Daq
+            Delta_L = Connector%SafeNode(indxStrm)%TotAreaL/(2*Connector%L(indxStrm)) - Bsafe - 2*Daq
+            Delta_R = Connector%SafeNode(indxStrm)%TotAreaR/(2*Connector%L(indxStrm)) - Bsafe - 2*Daq
             G_isoD_L = Gamma_iso_L / ( 1 + Gamma_iso_L * ( Delta_L/Daq ) )
             G_isoD_R = Gamma_iso_R / ( 1 + Gamma_iso_R * ( Delta_R/Daq ) )
 
