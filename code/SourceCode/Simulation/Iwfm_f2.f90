@@ -62,15 +62,15 @@ PROGRAM IWFM_F2
           
       !Otherwise, simulate
       ELSE
-        open(99, file = 'ASYM_QSINT.dat', status = 'UNKNOWN')
+        !open(99, file = 'ASYM_QSINT.dat', status = 'UNKNOWN')
         open(98, file = 'IncipDesat.dat', status = 'UNKNOWN')
-        open(97, file = 'Test.dat', status = 'UNKNOWN')
+        !open(97, file = 'Test.dat', status = 'UNKNOWN')
         open(96, file = 'StrmData.dat', status = 'UNKNOWN')
         open(95, file = 'asymStrmData.dat', status = 'UNKNOWN')
         CALL Model%Simulate(0,iStat)
         close(96)
         close(95)
-        close(97)
+        !close(97)
         close(98)
         close(99)
         close(94)

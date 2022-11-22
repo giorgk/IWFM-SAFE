@@ -4253,7 +4253,7 @@ CONTAINS
         
         ! Vertical FLows
         !COMPUTE UPWARD AND DOWNWARD VERTICAL FLOW AT ALL ELEMENTS IN A LAYER BETWEEN THAT LAYER AND THE ACTIVE LAYER BELOW
-        !!CALL GetVerticalElementUpwardDownwardFlow_AtLayer(AppGW,1,AppGrid,Stratigraphy,rVertFlow_Upward,rVertFlow_Downward)
+        CALL GetVerticalElementUpwardDownwardFlow_AtLayer(AppGW,1,AppGrid,Stratigraphy,rVertFlow_Upward,rVertFlow_Downward)
         
         ! Subsidence
         !!CALL AppGW%AppSubsidence%GetSubsidenceAtLayer(1,SubsND)
@@ -4279,7 +4279,7 @@ CONTAINS
         !!END DO
         !!CALL AppGrid%NodeData_To_ElemData(QsIrigND, QsIrigEL)
         
-        !Qelem = -NetElemSource + Pump - rVertFlow_Upward + rVertFlow_Downward + SubsEL + QtileEL + QsIrigEL
+        Qelem = -NetElemSource + Pump - rVertFlow_Upward + rVertFlow_Downward ! + SubsEL + QtileEL + QsIrigEL
         
         ! Pumping only
         !Qelem = Pump  
@@ -4288,7 +4288,7 @@ CONTAINS
         !Qelem = -NetElemSource 
 
         ! Groundwater recharge and Pumping
-        Qelem = -NetElemSource + Pump
+        !Qelem = -NetElemSource + Pump
 
         !open(96, file = 'safe_Qterms.dat', status = 'UNKNOWN')
         !DO ii = 1,SIZE(Qelem)
