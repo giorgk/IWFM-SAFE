@@ -4279,7 +4279,7 @@ CONTAINS
         !!END DO
         !!CALL AppGrid%NodeData_To_ElemData(QsIrigND, QsIrigEL)
         
-        Qelem = -NetElemSource + Pump - rVertFlow_Upward + rVertFlow_Downward ! + SubsEL + QtileEL + QsIrigEL
+        Qelem = -NetElemSource + Pump! - rVertFlow_Upward + rVertFlow_Downward ! + SubsEL + QtileEL + QsIrigEL
         
         ! Pumping only
         !Qelem = Pump  
