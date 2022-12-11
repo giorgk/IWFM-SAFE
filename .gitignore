@@ -5,7 +5,7 @@
 
 # ignore the folder where I put all the communication with Hubert
 /Examples/*
-/Examples/test1/HubertDocs/*
+#/Examples/test1/HubertDocs/*
 
 # From the code folders ignore everything that is generated at compile time
 /code/Budget/*
@@ -18,3 +18,6 @@
 !/code/Simulation_Parallel/.vfproj
 /code/ZBudget/*
 !/code/ZBudget/.vfproj
+
+# Remove all folder except the code
+/AGU_2022/*
