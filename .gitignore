@@ -1,11 +1,6 @@
 # ignore the simulation output files 
 *.hdf
 *.out
-*.bin
-
-# ignore the folder where I put all the communication with Hubert
-/Examples/*
-/Examples/test1/HubertDocs/*
 
 # From the code folders ignore everything that is generated at compile time
 /code/Budget/*
