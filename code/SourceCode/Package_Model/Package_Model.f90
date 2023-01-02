@@ -5161,7 +5161,7 @@ CONTAINS
             !write(*,*) 'Iteration', ITERX
             
             CALL Convergence(ITERX,Model%Convergence,Model%AppGrid,Model%Stratigraphy,Model%TimeStep,Model%Matrix,Model%AppStream,Model%AppLake,Model%AppGW,lEndIteration,iStat)
-            write(94,'(I10, F20.5)') ITERX,  Model%Convergence%DIFF_L2_OLD
+            !write(94,'(I10, F20.5)') ITERX,  Model%Convergence%DIFF_L2_OLD
             IF (iStat .EQ. -1) RETURN
 
             !IF (lEndIteration .AND. iUseSafe == 0) THEN

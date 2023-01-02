@@ -1091,7 +1091,7 @@ CONTAINS
         
         !Stream is gaining; no need to worry about drying stream (i.e. stream-gw flow is not a function of upstream flows)
         !Also, WetPerimeter is a function of gw head
-        IF (rStrmGWFlow .LT. 0.0) THEN
+        IF (rStrmGWFlow_SAFE .LT. 0.0) THEN
             !IF (Connector%iUseSafe .EQ. 1) THEN
                 Connector%StrmGWFlow(indxStrm) = rStrmGWFlow_SAFE    ! Safe replacement
             !ELSE
@@ -1165,7 +1165,7 @@ CONTAINS
             CALL Matrix%UpdateCOEFF(f_iGWComp,iGWNode,2,iCompIDs,iNodes_Connect,rUpdateCOEFF)
             
             !Store flow exchange
-            Connector%StrmGWFlow(indxStrm) = MIN(rStrmGWFlow,rNodeAvailableFlow)
+            Connector%StrmGWFlow(indxStrm) = MIN(rStrmGWFlow_SAFE,rNodeAvailableFlow)
 
         END IF
 
@@ -1496,7 +1496,7 @@ CONTAINS
         hicnip2 = (rHstage + Connector%SafeNode(indxStrm)%e_cl + Connector%SafeNode(indxStrm)%h_ce)/Connector%SafeNode(indxStrm)%e_cl
         hicnip = Connector%SafeNode(indxStrm)%SHead - hicnip1 * Connector%SafeNode(indxStrm)%K_cl * hicnip2
         Connector%SafeNode(indxStrm)%hicnip = hicnip
-        write(98,'(I5, F15.5, F15.5, F15.5, F15.5)') indxStrm, hicnip, Connector%SafeNode(indxStrm)%GHead,  Connector%SafeNode(indxStrm)%SHead, Connector%SafeNode(indxStrm)%TopRiverBed
+        !write(98,'(I5, F15.5, F15.5, F15.5, F15.5)') indxStrm, hicnip, Connector%SafeNode(indxStrm)%GHead,  Connector%SafeNode(indxStrm)%SHead, Connector%SafeNode(indxStrm)%TopRiverBed
 
     END DO
 

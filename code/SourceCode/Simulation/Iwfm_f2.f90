@@ -52,7 +52,7 @@ PROGRAM IWFM_F2
   ELSE
       ! Just check the compilation process
       write(*,*) "SAFE EXPERIMENTATIONS"
-      open(94, file = 'SAFE_converge.dat', status = 'UNKNOWN')
+      !open(94, file = 'SAFE_converge.dat', status = 'UNKNOWN')
       !Instantaite model
       CALL Model%New('',lForInquiry=.FALSE.,iStat=iStat)
            
@@ -62,18 +62,11 @@ PROGRAM IWFM_F2
           
       !Otherwise, simulate
       ELSE
-        !open(99, file = 'ASYM_QSINT.dat', status = 'UNKNOWN')
-        open(98, file = 'IncipDesat.dat', status = 'UNKNOWN')
-        !open(97, file = 'Test.dat', status = 'UNKNOWN')
-        open(96, file = 'StrmData.dat', status = 'UNKNOWN')
-        open(95, file = 'asymStrmData.dat', status = 'UNKNOWN')
+        
         CALL Model%Simulate(0,iStat)
-        close(96)
-        close(95)
-        !close(97)
-        close(98)
-        close(99)
-        close(94)
+        
+        close(99) !This file opens in stream component 4.11 during compile conductance
+        !close(94)
         IF (iStat .EQ. -1) CALL LogLastMessage()
           
       END IF
