@@ -68,16 +68,16 @@ MODULE Class_StrmGWConnector_v411
   ! This structure is used to hold data for the left and right head interpolation
   TYPE OffsetPointListType
     INTEGER       :: Npoints ! 
-    INTEGER       :: elemID(20) ! The element id that each point belongs to
-    INTEGER       :: Nsides(20) ! How many sides the element has
-    REAL(8)       :: COEF1(20)
-    REAL(8)       :: COEF2(20)
-    REAL(8)       :: COEF3(20)
-    REAL(8)       :: COEF4(20)
-    INTEGER       :: ID1(20)
-    INTEGER       :: ID2(20)
-    INTEGER       :: ID3(20)
-    INTEGER       :: ID4(20)
+    INTEGER       :: elemID(50) ! The element id that each point belongs to
+    INTEGER       :: Nsides(50) ! How many sides the element has
+    REAL(8)       :: COEF1(50)
+    REAL(8)       :: COEF2(50)
+    REAL(8)       :: COEF3(50)
+    REAL(8)       :: COEF4(50)
+    INTEGER       :: ID1(50)
+    INTEGER       :: ID2(50)
+    INTEGER       :: ID3(50)
+    INTEGER       :: ID4(50)
     REAL(8)       :: AvHead
 
    CONTAINS
@@ -223,7 +223,8 @@ CONTAINS
     REAL(8),ALLOCATABLE             :: VertAreas(:)
     INTEGER                         :: ielem, ii, jj, faceid, elemA, elemB, id_vert, other_el, cnt_el, kk, fc, nd_a, nd_b, n_side, id1, id2, id3, id4
     INTEGER                         :: faceNodes(2)
-    REAL(8)                         :: bcx, bcy, ax, ay, bx, by, cx, cy, pxn, pyn, len, ab, wa, wb, area_a, area_b, ang, ang_a, ang_b, px, py, vertarea, cf1, cf2, cf3, cf4, dst
+    REAL(8)                         :: bcx, bcy, ax, ay, bx, by, cx, cy, pxn, pyn, len, ab, wa, wb, area_a, area_b, ang, ang_a, ang_b, px, py, vertarea, &
+                                       cf1, cf2, cf3, cf4, dst, dst1, dlx, dly, lx_step, ly_step
     LOGICAL                         :: tf, tf1
     TYPE(SafeNodeType),DIMENSION(NStrmNodes)            :: safeType
     INTEGER,ALLOCATABLE :: Nodes(:)
@@ -279,7 +280,7 @@ CONTAINS
     ALine = ADJUSTL(StripTextUntilCharacter(ALine,'/'))
     CALL CleanSpecialCharacters(ALine)
     open(99, file = ALine, status = 'UNKNOWN')
-    write(99,*) '    IRV   Qsint_QL   Qsint_QR   Qsint_HL   Qsint_HR   GHead   SHead   Hincip'
+    write(99,'(a)') '    IRV   Qsint_QL   Qsint_QR   Qsint_HL   Qsint_HR   GHead   SHead   Hincip   HeadQL   HeadQR   HeadL   HeadR'
     ! At the moment I'm closing the file at the main procedure (see iwfm_f2.f90)
 
     !CALL InFile%ReadData(iuseq4h,iStat)
@@ -296,6 +297,7 @@ CONTAINS
     ! Read the layer that the bottom corresponds to the geologic layer
     
     !write(94,'(I5)') NStrmNodes 
+    open(98, file = 'HinterpPoints.dat', status = 'UNKNOWN')
         
     
     DO indxNode=1,NStrmNodes
@@ -385,9 +387,9 @@ CONTAINS
             
             B_DISTANCE                = F_DISTANCE
             
-            IF (indxNode .EQ. iDownstrmNode) THEN
-                safeType(indxNode)%Gsafe = AppGrid%AppNode(indxNode)%Area/B_DISTANCE
-            END IF
+            !IF (indxNode .EQ. iDownstrmNode) THEN
+            !    safeType(indxNode)%Gsafe = AppGrid%AppNode(iGWNode)%Area/B_DISTANCE
+            !END IF
             
             !------- Algorithm to identify left and right ---------------------
             ! faceNodes contains the IGW indices of the face that corresponds to the river segment
@@ -459,7 +461,20 @@ CONTAINS
                     CALL safeType(indxNode)%AddElemOnSide(elemA, 1, wa, nd_a)
                 END IF
             END IF
-            
+        END DO
+        
+        ! Assign properties to the last node of the stream
+        safeType(iDownstrmNode)%IRV = iDownstrmNode
+        iGWNode       = iGWNodes(iDownstrmNode)
+        safeType(iDownstrmNode)%IGW = iGWNode
+        safeType(iDownstrmNode)%L = B_DISTANCE
+        safeType(iDownstrmNode)%Gsafe = AppGrid%AppNode(iGWNode)%Area/B_DISTANCE
+        safeType(iDownstrmNode)%LayerBottomElevation = Stratigraphy%BottomElev(iGWNode,iGeoLay)
+        
+        ! Loop through the river segments to identify head interpolation points left and right of the streams
+        DO indxNode=iUpstrmNode+1,iDownstrmNode
+            iGWUpstrmNode = iGWNodes(indxNode-1)
+            iGWNode       = iGWNodes(indxNode)
             ! ----------- Preprocessing  for fast element interpolation to calculate the head left and right
             ! Find a number of points on either side of the river segment at a given distance
             ax = AppGrid%X(iGWNode) - AppGrid%X(iGWUpstrmNode) !This is the vector along the stream
@@ -475,83 +490,87 @@ CONTAINS
             ! Righ Perpendicular vector
             cx = ay
             cy = -ax
-            ab = 0.01
-            DO WHILE (ab .LE. 1.0)
-                ! This is the point to shoot the vector from
-                px = AppGrid%X(iGWUpstrmNode)*(1.0-ab) + AppGrid%X(iGWNode)*ab
-                py = AppGrid%Y(iGWUpstrmNode)*(1.0-ab) + AppGrid%Y(iGWNode)*ab
-                !write(*,*) 'plot(', px, ',' , py, ',".")'
-                ! Left point at a Gsafe distance
-                dst = (safeType(indxNode-1)%Gsafe*(1.0-ab) + safeType(indxNode)%Gsafe*ab)/2.0
-                pxn = px + dst*bx
-                pyn = py + dst*by
-                !write(*,*) 'plot(', pxn, ',' , pyn, ',"x")'
-                CALL AppGrid%FEInterpolate(pxn,pyn,ielem,Nodes,Coeff)
-
-                IF (ielem .NE.0) THEN
-                    cf1 = Coeff(1)
-                    cf2 = Coeff(2)
-                    cf3 = Coeff(3)
-                    id1 = Nodes(1)
-                    id2 = Nodes(2)
-                    id3 = Nodes(3)
-                    IF (SIZE(Coeff) .EQ. 3) THEN
-                        n_side = 3
-                        cf4 = 0.0
-                        id4 = 0
-                    ELSE
-                        n_side = 4
-                        cf4 = Coeff(4)
-                        id4 = Nodes(4)
-                    END IF
-                    ! The points from the first half of the river segment are assigned to the first node
-                    if (ab .LT. 0.5)THEN
-                        CALL safeType(indxNode-1)%LeftPoints%AddPoint(ielem, n_side, cf1, cf2, cf3, cf4, id1, id2, id3, id4)
-                    ELSE
-                        CALL safeType(indxNode)%LeftPoints%AddPoint(ielem, n_side, cf1, cf2, cf3, cf4, id1, id2, id3, id4)
-                    END IF
-                END IF
-
-                ! Right point at Gsafe distance
-                pxn = px + dst*cx
-                pyn = py + dst*cy
-                !write(*,*) 'plot(', pxn, ',' , pyn, ',"x")'
-                CALL AppGrid%FEInterpolate(pxn,pyn,ielem,Nodes,Coeff)
-                
-                IF (ielem .NE.0) THEN
-                    cf1 = Coeff(1)
-                    cf2 = Coeff(2)
-                    cf3 = Coeff(3)
-                    id1 = Nodes(1)
-                    id2 = Nodes(2)
-                    id3 = Nodes(3)
-                    IF (SIZE(Coeff) .EQ. 3) THEN
-                        n_side = 3
-                        cf4 = 0.0
-                        id4 = 0
-                    ELSE
-                        n_side = 4
-                        cf4 = Coeff(4)
-                        id4 = Nodes(4)
-                    END IF
-                    if (ab .LT. 0.5)THEN
-                        CALL safeType(indxNode-1)%RightPoints%AddPoint(ielem, n_side, cf1, cf2, cf3, cf4, id1, id2, id3, id4)
-                    ELSE
-                        CALL safeType(indxNode)%RightPoints%AddPoint(ielem, n_side, cf1, cf2, cf3, cf4, id1, id2, id3, id4)
-                    END IF
-                END IF
-
-                ab = ab + 0.1089
-            END DO
+            lx_step = 0.01
             
+            dlx = (0.99-0.01)/(10-1) ! discretization along the river. For n points set as (0.99-0.01)/(n-1)
+            dly = (0.99-0.01)/(4-1) !discretization perpendicular to the river along the GSafe distance
+            DO WHILE (lx_step .LE. 1.0)
+                ! This is the point to shoot the vector from
+                px = AppGrid%X(iGWUpstrmNode)*(1.0-lx_step) + AppGrid%X(iGWNode)*lx_step
+                py = AppGrid%Y(iGWUpstrmNode)*(1.0-lx_step) + AppGrid%Y(iGWNode)*lx_step
+                dst = (safeType(indxNode-1)%Gsafe*(1.0-lx_step) + safeType(indxNode)%Gsafe*lx_step)/2.0
+                ly_step = 0.01
+                
+                DO WHILE (ly_step .LE. 1.0)
+                    dst1 = dst * ly_step
+                    !write(*,*) 'plot(', px, ',' , py, ',".")'
+                    ! Left point at a Gsafe distance
+                    
+                    pxn = px + dst1*bx
+                    pyn = py + dst1*by
+                    !write(*,*) 'plot(', pxn, ',' , pyn, ',"x")'
+                    write(98,'(F25.5, F25.5)') pxn, pyn
+                    CALL AppGrid%FEInterpolate(pxn,pyn,ielem,Nodes,Coeff)
+
+                    IF (ielem .NE.0) THEN
+                        cf1 = Coeff(1)
+                        cf2 = Coeff(2)
+                        cf3 = Coeff(3)
+                        id1 = Nodes(1)
+                        id2 = Nodes(2)
+                        id3 = Nodes(3)
+                        IF (SIZE(Coeff) .EQ. 3) THEN
+                            n_side = 3
+                            cf4 = 0.0
+                            id4 = 0
+                        ELSE
+                            n_side = 4
+                            cf4 = Coeff(4)
+                            id4 = Nodes(4)
+                        END IF
+                        ! The points from the first half of the river segment are assigned to the first node
+                        if (lx_step .LT. 0.5)THEN
+                            CALL safeType(indxNode-1)%LeftPoints%AddPoint(ielem, n_side, cf1, cf2, cf3, cf4, id1, id2, id3, id4)
+                        ELSE
+                            CALL safeType(indxNode)%LeftPoints%AddPoint(ielem, n_side, cf1, cf2, cf3, cf4, id1, id2, id3, id4)
+                        END IF
+                    END IF
+
+                    ! Right point at Gsafe distance
+                    pxn = px + dst1*cx
+                    pyn = py + dst1*cy
+                    !write(*,*) 'plot(', pxn, ',' , pyn, ',"x")'
+                    write(98,'(F25.5, F25.5)') pxn, pyn
+                    CALL AppGrid%FEInterpolate(pxn,pyn,ielem,Nodes,Coeff)
+                
+                    IF (ielem .NE.0) THEN
+                        cf1 = Coeff(1)
+                        cf2 = Coeff(2)
+                        cf3 = Coeff(3)
+                        id1 = Nodes(1)
+                        id2 = Nodes(2)
+                        id3 = Nodes(3)
+                        IF (SIZE(Coeff) .EQ. 3) THEN
+                            n_side = 3
+                            cf4 = 0.0
+                            id4 = 0
+                        ELSE
+                            n_side = 4
+                            cf4 = Coeff(4)
+                            id4 = Nodes(4)
+                        END IF
+                        if (lx_step .LT. 0.5)THEN
+                            CALL safeType(indxNode-1)%RightPoints%AddPoint(ielem, n_side, cf1, cf2, cf3, cf4, id1, id2, id3, id4)
+                        ELSE
+                            CALL safeType(indxNode)%RightPoints%AddPoint(ielem, n_side, cf1, cf2, cf3, cf4, id1, id2, id3, id4)
+                        END IF
+                    END IF
+                    ly_step = ly_step + dly
+                END DO
+                lx_step = lx_step + dlx
+            END DO
         END DO
         
-        ! Assign properties to the last node of the stream
-        safeType(iDownstrmNode)%IRV = iDownstrmNode
-        safeType(iDownstrmNode)%IGW = iGWNodes(iDownstrmNode)
-        safeType(iDownstrmNode)%L = B_DISTANCE
-        !safeType(iDownstrmNode)%Gsafe = AppGrid%AppNode(iDownstrmNode)%Area/B_DISTANCE
-        safeType(iDownstrmNode)%LayerBottomElevation = Stratigraphy%BottomElev(iDownstrmNode,iGeoLay)
 
 
         ! Loop through the river nodes again without looking the start and end nodes
@@ -709,7 +728,7 @@ CONTAINS
         !Gsafe(iDownstrmNode)       = 2*Wsafe(iDownstrmNode)
         !write(*,*) 'indxNode:', iDownstrmNode, 'iGWNode:', iGWNode, 'rNodeArea:', rNodeArea, 'Wsafe:', Wsafe(iDownstrmNode), 'Gsafe:', Gsafe(iDownstrmNode), 'L:', B_DISTANCE
     END DO
-    
+    close(98)
     !Allocate memory
     !ALLOCATE (Connector%Conductance(NStrmNodes) , Connector%StrmGWFlow(NStrmNodes) , Connector%rBedThickness(NStrmNodes) , &
     !    Connector%Gsafe(NStrmNodes), Connector%LayerBottomElevation(NStrmNodes), &
@@ -1272,7 +1291,7 @@ CONTAINS
     !CLASS(AbstractFunctionType),OPTIONAL,INTENT(IN) :: WetPerimeterFunction(:)
     INTEGER                             :: indxStrm, iGWNode, tf
     REAL(8)                             :: rUnitConductance, rGWHead, rSHead, rTimeFactor, rWetPerimeter,  &
-                                           Qsint_QL, Qsint_QR, Qsint_HL, Qsint_HR, rGWHead_OUT, rSHead_OUT, hicnip_OUT
+                                           Qsint_QL, Qsint_QR, Qsint_HL, Qsint_HR, rGWHead_OUT, rSHead_OUT, hicnip_OUT, hQL, hQR, hL, hR
     !fracL, fracR, hLtmp, hRtmp, h_L, h_R, rHstage, Daq, nDp, nWp, kappa, G_flat, &
     !a1, a2, riverWidth, Bsafe, h_mean, Gamma_flat_L, Gamma_flat_R, Gamma_iso_L, Gamma_iso_R, &
     !Delta_L, Delta_R, Gamma_QL, Gamma_QR, rho_anis, delta_anis, ksi_safe, R_f, G_iso_Danis_L, G_iso_Danis_R, &
@@ -1288,8 +1307,8 @@ CONTAINS
     rTimeFactor = Connector%Conductance(1) / Connector%CondTemp
     DO indxStrm=1,SIZE(Connector%Conductance)
 
-        CALL Connector%SafeNode(indxStrm)%CalculateLR_SPD(1, Qsint_QL, Qsint_QR, rGWHead_OUT, rSHead_OUT, hicnip_OUT, rTimeFactor)
-        CALL Connector%SafeNode(indxStrm)%CalculateLR_SPD(0, Qsint_HL, Qsint_HR, rGWHead_OUT, rSHead_OUT, hicnip_OUT, rTimeFactor)
+        CALL Connector%SafeNode(indxStrm)%CalculateLR_SPD(1, Qsint_QL, Qsint_QR, rGWHead_OUT, rSHead_OUT, hicnip_OUT, hQL, hQR, rTimeFactor)
+        CALL Connector%SafeNode(indxStrm)%CalculateLR_SPD(0, Qsint_HL, Qsint_HR, rGWHead_OUT, rSHead_OUT, hicnip_OUT, hL, hR, rTimeFactor)
 
         !iGWNode        = (Connector%iLayer(indxStrm)-1) * iNNodes + Connector%iGWNode(indxStrm)
         ! rUnitConductance  = Connector%Conductance(indxStrm)
@@ -1421,7 +1440,7 @@ CONTAINS
 !         Qsint_R = Qsint_WR * Qsint_TOT
         
         
-        write(99,'(I7, F25.5, F25.5, F25.5, F25.5, F25.5, F25.5, F25.5)') indxStrm, Qsint_QL, Qsint_QR, Qsint_HL, Qsint_HR , rGWHead_OUT, rSHead_OUT, hicnip_OUT
+        write(99,'(I7, F25.5, F25.5, F25.5, F25.5, F25.5, F25.5, F25.5, F25.5, F25.5, F25.5, F25.5)') indxStrm, Qsint_QL, Qsint_QR, Qsint_HL, Qsint_HR , rGWHead_OUT, rSHead_OUT, hicnip_OUT, hQL, hQR, hL, hR
 
         ! The following code calculates the symetric SW-GW interaction for comparison with the output data
         
@@ -1743,11 +1762,11 @@ CONTAINS
   
   END SUBROUTINE CalculateTotalQLR
   
-  SUBROUTINE CalculateLR_SPD(SafeNode, iUseQ4Head, Qsint_L, Qsint_R, rGWHead_OUT, rSHead_OUT, hicnip_OUT,  rTimeFactor)
+  SUBROUTINE CalculateLR_SPD(SafeNode, iUseQ4Head, Qsint_L, Qsint_R, rGWHead_OUT, rSHead_OUT, hicnip_OUT, hL_OUT, hR_OUT,  rTimeFactor)
     CLASS (SafeNodeType),INTENT(IN)  :: SafeNode
     INTEGER,INTENT(IN)               :: iUseQ4Head
     REAL(8),INTENT(IN)               :: rTimeFactor
-    REAL(8),INTENT(OUT)              :: Qsint_L, Qsint_R, rGWHead_OUT, rSHead_OUT, hicnip_OUT
+    REAL(8),INTENT(OUT)              :: Qsint_L, Qsint_R, rGWHead_OUT, rSHead_OUT, hicnip_OUT, hL_OUT, hR_OUT
     INTEGER                          :: tf
     REAL(8)                          :: h_L, h_R, fracL, fracR, rGWHead, rSHead, rHstage, Daq, nDp, nWp, kappa, G_flat, a1, a2, &
                                         riverWidth, Bsafe, Gamma_flat_L, Gamma_flat_R, Gamma_iso_L, Gamma_iso_R, Delta_L, Delta_R, &
@@ -1772,6 +1791,8 @@ CONTAINS
         h_L = SafeNode%LeftPoints%AvHead
         h_R = SafeNode%RightPoints%AvHead
     END IF
+    hL_OUT = h_L
+    hR_OUT = h_R
     
     ! -------  Flat Conductance
     rHstage = rSHead - SafeNode%TopRiverBed ! - Connector%e_cl(indxStrm)
