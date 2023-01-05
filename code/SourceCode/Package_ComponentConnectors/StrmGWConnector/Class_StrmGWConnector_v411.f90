@@ -372,10 +372,10 @@ CONTAINS
            !LayerBottomElevation(indxNode-1) = Stratigraphy%BottomElev(iGWUpstrmNode,iGeoLay)
            safeType(indxNode-1)%LayerBottomElevation = Stratigraphy%BottomElev(iGWUpstrmNode,iGeoLay)
             
-            rNodeArea               = AppGrid%AppNode(iGWUpstrmNode)%Area
+            !rNodeArea               = AppGrid%AppNode(iGWUpstrmNode)%Area
             !Wsafe(indxNode-1)       = rNodeArea/(2*(F_DISTANCE+B_DISTANCE))
             !Gsafe(indxNode-1)       = rNodeArea/(F_DISTANCE+B_DISTANCE)
-            safeType(indxNode-1)%Gsafe = rNodeArea/(F_DISTANCE+B_DISTANCE)
+            !safeType(indxNode-1)%Gsafe = rNodeArea/(F_DISTANCE+B_DISTANCE)
 
             !IF (indxNode .LT. iDownstrmNode) THEN
             !    CA = AppGrid%X(iGWNode) - AppGrid%X(iGWNodes(indxNode+1))
@@ -461,6 +461,55 @@ CONTAINS
                     CALL safeType(indxNode)%AddElemOnSide(elemA, 1, wa, nd_a)
                 END IF
             END IF
+
+            IF (indxNode-1 .EQ. iUpstrmNode) THEN
+                vertarea = 0
+                IF (elemA .NE. 0) THEN
+                    VertAreas = AppGrid%AppElement(elemA)%VertexArea
+                    DO kk = 1,SIZE(VertAreas)
+                        IF (AppGrid%Vertex(kk,elemA) .EQ. iGWUpstrmNode) THEN
+                            vertarea = vertarea + VertAreas(kk)
+                            EXIT
+                        END IF
+                    END DO
+                END IF
+                IF (elemB .NE. 0) THEN
+                    VertAreas = AppGrid%AppElement(elemB)%VertexArea
+                    DO kk = 1,SIZE(VertAreas)
+                        IF (AppGrid%Vertex(kk,elemB) .EQ. iGWUpstrmNode) THEN
+                            vertarea = vertarea + VertAreas(kk)
+                            EXIT
+                        END IF
+                    END DO
+                END IF
+                safeType(indxNode-1)%Gsafe = vertarea / safeType(indxNode-1)%L
+            ELSE IF (indxNode .EQ. iDownstrmNode) THEN
+                safeType(indxNode-1)%Gsafe = AppGrid%AppNode(iGWUpstrmNode)%Area / safeType(indxNode-1)%L
+                vertarea = 0
+                IF (elemA .NE. 0) THEN
+                    VertAreas = AppGrid%AppElement(elemA)%VertexArea
+                    DO kk = 1,SIZE(VertAreas)
+                        IF (AppGrid%Vertex(kk,elemA) .EQ. iGWNode) THEN
+                            vertarea = vertarea + VertAreas(kk)
+                            EXIT
+                        END IF
+                    END DO
+                END IF
+                IF (elemB .NE. 0) THEN
+                    VertAreas = AppGrid%AppElement(elemB)%VertexArea
+                    DO kk = 1,SIZE(VertAreas)
+                        IF (AppGrid%Vertex(kk,elemB) .EQ. iGWNode) THEN
+                            vertarea = vertarea + VertAreas(kk)
+                            EXIT
+                        END IF
+                    END DO
+                END IF
+                safeType(indxNode)%Gsafe = vertarea / B_DISTANCE
+            ELSE
+                safeType(indxNode-1)%Gsafe = AppGrid%AppNode(iGWUpstrmNode)%Area / safeType(indxNode-1)%L
+            END IF
+
+
         END DO
         
         ! Assign properties to the last node of the stream
@@ -468,8 +517,9 @@ CONTAINS
         iGWNode       = iGWNodes(iDownstrmNode)
         safeType(iDownstrmNode)%IGW = iGWNode
         safeType(iDownstrmNode)%L = B_DISTANCE
-        safeType(iDownstrmNode)%Gsafe = AppGrid%AppNode(iGWNode)%Area/B_DISTANCE
+        !safeType(iDownstrmNode)%Gsafe = AppGrid%AppNode(iGWNode)%Area/B_DISTANCE
         safeType(iDownstrmNode)%LayerBottomElevation = Stratigraphy%BottomElev(iGWNode,iGeoLay)
+        
         
         ! Loop through the river segments to identify head interpolation points left and right of the streams
         DO indxNode=iUpstrmNode+1,iDownstrmNode
@@ -509,7 +559,7 @@ CONTAINS
                     pxn = px + dst1*bx
                     pyn = py + dst1*by
                     !write(*,*) 'plot(', pxn, ',' , pyn, ',"x")'
-                    write(98,'(F25.5, F25.5)') pxn, pyn
+                    
                     CALL AppGrid%FEInterpolate(pxn,pyn,ielem,Nodes,Coeff)
 
                     IF (ielem .NE.0) THEN
@@ -534,13 +584,14 @@ CONTAINS
                         ELSE
                             CALL safeType(indxNode)%LeftPoints%AddPoint(ielem, n_side, cf1, cf2, cf3, cf4, id1, id2, id3, id4)
                         END IF
+                        write(98,'(F25.5, F25.5)') pxn, pyn
                     END IF
 
                     ! Right point at Gsafe distance
                     pxn = px + dst1*cx
                     pyn = py + dst1*cy
                     !write(*,*) 'plot(', pxn, ',' , pyn, ',"x")'
-                    write(98,'(F25.5, F25.5)') pxn, pyn
+                    
                     CALL AppGrid%FEInterpolate(pxn,pyn,ielem,Nodes,Coeff)
                 
                     IF (ielem .NE.0) THEN
@@ -564,6 +615,7 @@ CONTAINS
                         ELSE
                             CALL safeType(indxNode)%RightPoints%AddPoint(ielem, n_side, cf1, cf2, cf3, cf4, id1, id2, id3, id4)
                         END IF
+                        write(98,'(F25.5, F25.5)') pxn, pyn
                     END IF
                     ly_step = ly_step + dly
                 END DO
