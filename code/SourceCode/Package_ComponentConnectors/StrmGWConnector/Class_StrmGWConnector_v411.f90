@@ -549,7 +549,7 @@ CONTAINS
                 px = AppGrid%X(iGWUpstrmNode)*(1.0-lx_step) + AppGrid%X(iGWNode)*lx_step
                 py = AppGrid%Y(iGWUpstrmNode)*(1.0-lx_step) + AppGrid%Y(iGWNode)*lx_step
                 dst = (safeType(indxNode-1)%Gsafe*(1.0-lx_step) + safeType(indxNode)%Gsafe*lx_step)/2.0
-                ly_step = 0.01
+                ly_step = 0.01 + dly
                 
                 DO WHILE (ly_step .LE. 1.0)
                     dst1 = dst * ly_step
